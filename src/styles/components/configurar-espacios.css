@@ -1,0 +1,343 @@
+/* ── Contenedor principal ─────────────────────────────────────────────────── */
+.ce-container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+    font-family: 'Satoshi', 'Inter', sans-serif;
+}
+
+/* ── Header ───────────────────────────────────────────────────────────────── */
+.ce-back-link {
+    display: inline-block;
+    font-size: 0.875rem;
+    color: var(--color-primary, #01696f);
+    text-decoration: none;
+    margin-bottom: 0.75rem;
+    transition: opacity 180ms;
+}
+
+.ce-back-link:hover {
+    opacity: 0.7;
+}
+
+.ce-title {
+    font-size: clamp(1.5rem, 1.2rem + 1.25vw, 2.25rem);
+    font-weight: 700;
+    color: var(--color-text, #28251d);
+    margin-bottom: 0.25rem;
+}
+
+.ce-subtitle {
+    font-size: 0.9rem;
+    color: var(--color-text-muted, #7a7974);
+    margin-bottom: 1.5rem;
+}
+
+/* ── Alertas ──────────────────────────────────────────────────────────────── */
+.ce-alert {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    font-size: 0.9rem;
+    margin-bottom: 1.25rem;
+}
+
+.ce-alert svg {
+    width: 1.1rem;
+    height: 1.1rem;
+    flex-shrink: 0;
+}
+
+.ce-alert-success {
+    background: #d4dfcc;
+    color: #1e3f0a;
+    border: 1px solid #b4ceaa;
+}
+
+.ce-alert-error {
+    background: #e0ced7;
+    color: #561740;
+    border: 1px solid #c9a8be;
+}
+
+/* ── Layout dos columnas ──────────────────────────────────────────────────── */
+.ce-layout {
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    gap: 1.5rem;
+    align-items: start;
+}
+
+@media (max-width: 900px) {
+    .ce-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ── Tarjeta base ─────────────────────────────────────────────────────────── */
+.ce-card {
+    background: var(--color-surface, #f9f8f5);
+    border: 1px solid oklch(from #28251d l c h / 0.1);
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    box-shadow: 0 1px 2px oklch(0.2 0.01 80 / 0.06);
+}
+
+.ce-section-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-text, #28251d);
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* ── Badge contador ───────────────────────────────────────────────────────── */
+.ce-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.4rem;
+    height: 1.4rem;
+    padding: 0 0.4rem;
+    border-radius: 9999px;
+    background: var(--color-primary, #01696f);
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+/* ── Formulario ───────────────────────────────────────────────────────────── */
+.ce-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.ce-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.ce-field label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--color-text, #28251d);
+}
+
+.ce-input,
+.ce-select {
+    width: 100%;
+    padding: 0.55rem 0.75rem;
+    border: 1px solid oklch(from #28251d l c h / 0.15);
+    border-radius: 0.5rem;
+    font-size: 0.9rem;
+    background: var(--color-surface-2, #fbfbf9);
+    color: var(--color-text, #28251d);
+    transition: border-color 180ms, box-shadow 180ms;
+}
+
+.ce-input:focus,
+.ce-select:focus {
+    outline: none;
+    border-color: var(--color-primary, #01696f);
+    box-shadow: 0 0 0 3px oklch(from #01696f l c h / 0.15);
+}
+
+.ce-field-help {
+    font-size: 0.78rem;
+    color: var(--color-text-muted, #7a7974);
+}
+
+.ce-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+}
+
+.ce-form-actions {
+    margin-top: 0.5rem;
+}
+
+/* ── Botones ──────────────────────────────────────────────────────────────── */
+.ce-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 0.6rem 1.25rem;
+    border-radius: 0.5rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: background 180ms, opacity 180ms;
+}
+
+.ce-btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.ce-btn-primary {
+    width: 100%;
+    background: var(--color-primary, #01696f);
+    color: #fff;
+}
+
+.ce-btn-primary:hover:not(:disabled) {
+    background: var(--color-primary-hover, #0c4e54);
+}
+
+.ce-btn-icon {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 0.375rem;
+    padding: 0;
+    background: transparent;
+    border: 1px solid transparent;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 180ms;
+}
+
+.ce-btn-icon svg {
+    width: 1rem;
+    height: 1rem;
+}
+
+.ce-btn-danger {
+    color: #a12c7b;
+}
+
+.ce-btn-danger:hover:not(:disabled) {
+    background: #e0ced7;
+}
+
+/* ── Tabla ────────────────────────────────────────────────────────────────── */
+.ce-table-wrapper {
+    overflow-x: auto;
+}
+
+.ce-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+}
+
+.ce-table th {
+    text-align: left;
+    padding: 0.5rem 0.75rem;
+    font-weight: 600;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-text-muted, #7a7974);
+    border-bottom: 1px solid oklch(from #28251d l c h / 0.1);
+}
+
+.ce-table td {
+    padding: 0.65rem 0.75rem;
+    border-bottom: 1px solid oklch(from #28251d l c h / 0.07);
+    color: var(--color-text, #28251d);
+    vertical-align: middle;
+}
+
+.ce-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.ce-table tbody tr:hover td {
+    background: oklch(from #01696f l c h / 0.04);
+}
+
+.ce-time-cell {
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.ce-center {
+    text-align: center;
+}
+
+/* ── Chip de tópico ───────────────────────────────────────────────────────── */
+.ce-chip {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    background: var(--color-primary-highlight, #cedcd8);
+    color: var(--color-primary-active, #0f3638);
+    border-radius: 9999px;
+    font-size: 0.78rem;
+    font-weight: 500;
+}
+
+/* ── Estado vacío ─────────────────────────────────────────────────────────── */
+.ce-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--color-text-muted, #7a7974);
+}
+
+.ce-empty svg {
+    width: 2.5rem;
+    height: 2.5rem;
+    color: var(--color-text-faint, #bab9b4);
+    margin-bottom: 0.75rem;
+}
+
+.ce-empty p {
+    font-weight: 500;
+    color: var(--color-text, #28251d);
+    margin-bottom: 0.25rem;
+}
+
+.ce-empty span {
+    font-size: 0.85rem;
+}
+
+/* ── Skeletons ────────────────────────────────────────────────────────────── */
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+.ce-skeleton {
+    border-radius: 0.375rem;
+    background: linear-gradient(90deg,
+            var(--color-surface-offset, #f3f0ec) 25%,
+            var(--color-surface-dynamic, #e6e4df) 50%,
+            var(--color-surface-offset, #f3f0ec) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s ease-in-out infinite;
+}
+
+.ce-skeleton-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 0.5rem 0;
+}
+
+.ce-skeleton-row {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.ce-skeleton-text {
+    height: 0.9rem;
+}
