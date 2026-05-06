@@ -396,5 +396,55 @@ export const apiService = {
     if (!response.ok) throw new Error(await parseError(response, 'Error al eliminar archivo'));
     if (response.status === 204) return { ok: true };
     return response.json();
-  }
+  },
+
+  crearEspacio: async (conferenceId, datos) => {
+    const body = {
+      day: datos.day,
+      room: datos.room,
+      topic: datos.topic,
+      startTime: datos.startTime,
+      endTime: datos.endTime,
+      capacity: Number(datos.capacity),
+    };
+
+    const response = await fetch(
+      `${CONF_URL}/${encodeURIComponent(conferenceId)}/spaces/create`,
+      {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(body),
+      }
+    );
+
+    if (!response.ok) throw new Error(await parseError(response, 'Error al crear espacio'));
+    return response.json();
+  },
+
+  obtenerEspacios: async (conferenceId) => {
+    const response = await fetch(
+      `${CONF_URL}/${encodeURIComponent(conferenceId)}/spaces`,
+      {
+        method: 'GET',
+        headers: getAuthHeaders(),
+      }
+    );
+
+    if (!response.ok) throw new Error(await parseError(response, 'Error al obtener espacios'));
+    return response.json();
+  },
+
+  eliminarEspacio: async (conferenceId, spaceId) => {
+    const response = await fetch(
+      `${CONF_URL}/${encodeURIComponent(conferenceId)}/spaces/${encodeURIComponent(spaceId)}`,
+      {
+        method: 'DELETE',
+        headers: getAuthHeaders(),
+      }
+    );
+
+    if (!response.ok) throw new Error(await parseError(response, 'Error al eliminar espacio'));
+    if (response.status === 204) return { ok: true };
+    return response.json().catch(() => ({ ok: true }));
+  },
 };

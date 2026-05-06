@@ -181,6 +181,9 @@ const LandingConferencia = () => {
                             <Link to={`/editar-conferencia/${id}`} className="landing-btn-secondary">
                                 Editar Conferencia
                             </Link>
+                            <Link to={`/conferencia/${id}/configurar-espacios`} className="landing-btn-secondary">
+                                Configurar Espacios
+                            </Link>
                             <Link to={`/enviar-articulo/${id}`} className="landing-btn-secondary">
                                 Enviar Artículo
                             </Link>
