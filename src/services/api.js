@@ -5,6 +5,9 @@ const AUTH_URL = `${API_GATEWAY_URL}/api/v1/auth`;
 const CONF_URL = `${API_GATEWAY_URL}/conferences`;
 const PAPER_URL = `${API_GATEWAY_URL}/papers`;
 const FILE_URL = `${API_GATEWAY_URL}/files`;
+const ROOM_URL = `${API_GATEWAY_URL}/rooms`;
+const SCHEDULE_URL = `${API_GATEWAY_URL}/schedule`;
+const NOTIF_URL = `${API_GATEWAY_URL}/notifications`;
 
 const getToken = () => localStorage.getItem('accessToken');
 
@@ -398,53 +401,66 @@ export const apiService = {
     return response.json();
   },
 
-  crearEspacio: async (conferenceId, datos) => {
-    const body = {
-      day: datos.day,
-      room: datos.room,
-      topic: datos.topic,
-      startTime: datos.startTime,
-      endTime: datos.endTime,
-      capacity: Number(datos.capacity),
-    };
-
-    const response = await fetch(
-      `${CONF_URL}/${encodeURIComponent(conferenceId)}/spaces/create`,
-      {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: JSON.stringify(body),
-      }
-    );
-
-    if (!response.ok) throw new Error(await parseError(response, 'Error al crear espacio'));
+  // ─── Room Service (Salas) ───────────────────────────────────────────────
+  crearSala: async (conferenceId, datos) => {
+    const response = await fetch(`${ROOM_URL}/conference/${encodeURIComponent(conferenceId)}`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({
+        name: datos.name,
+        capacity: Number(datos.capacity),
+        type: datos.type || 'PRESENCIAL',
+        locationOrLink: datos.locationOrLink || 'Por definir',
+        topicHints: datos.topicHints || ''
+      }),
+    });
+    if (!response.ok) throw new Error(await parseError(response, 'Error al crear sala'));
     return response.json();
   },
 
-  obtenerEspacios: async (conferenceId) => {
-    const response = await fetch(
-      `${CONF_URL}/${encodeURIComponent(conferenceId)}/spaces`,
-      {
-        method: 'GET',
-        headers: getAuthHeaders(),
-      }
-    );
-
-    if (!response.ok) throw new Error(await parseError(response, 'Error al obtener espacios'));
+  obtenerSalas: async (conferenceId) => {
+    const response = await fetch(`${ROOM_URL}/conference/${encodeURIComponent(conferenceId)}`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error(await parseError(response, 'Error al obtener salas'));
     return response.json();
   },
 
-  eliminarEspacio: async (conferenceId, spaceId) => {
-    const response = await fetch(
-      `${CONF_URL}/${encodeURIComponent(conferenceId)}/spaces/${encodeURIComponent(spaceId)}`,
-      {
-        method: 'DELETE',
-        headers: getAuthHeaders(),
-      }
-    );
+  // ─── Schedule Service (Agenda) ──────────────────────────────────────────
+  crearSlotAgenda: async (conferenceId, datos) => {
+    const response = await fetch(`${SCHEDULE_URL}/slots/conference/${encodeURIComponent(conferenceId)}`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({
+        day: datos.day,
+        roomId: datos.roomId,
+        topic: datos.topic,
+        startTime: datos.startTime,
+        endTime: datos.endTime,
+        maxPapers: Number(datos.maxPapers)
+      }),
+    });
+    if (!response.ok) throw new Error(await parseError(response, 'Error al crear slot de agenda'));
+    return response.json();
+  },
 
-    if (!response.ok) throw new Error(await parseError(response, 'Error al eliminar espacio'));
-    if (response.status === 204) return { ok: true };
-    return response.json().catch(() => ({ ok: true }));
+  obtenerAgendaPorDia: async (conferenceId, day) => {
+    const response = await fetch(`${SCHEDULE_URL}/conference/${encodeURIComponent(conferenceId)}/day/${encodeURIComponent(day)}`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error(await parseError(response, 'Error al obtener agenda'));
+    return response.json();
+  },
+
+  // ─── Notification Service (Notificaciones) - Para Req 2 ─────────────────
+  obtenerNotificacionesPaper: async (paperId) => {
+    const response = await fetch(`${NOTIF_URL}/paper/${encodeURIComponent(paperId)}`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error(await parseError(response, 'Error al obtener notificaciones'));
+    return response.json();
   },
 };
