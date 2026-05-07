@@ -68,21 +68,43 @@ const ConfigurarEspacios = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (formData.endTime <= formData.startTime) {
+            setError('La hora de fin debe ser posterior a la de inicio.');
+            return;
+        }
+
+        setGuardando(true);
         setError('');
         setExito('');
 
-        const validacion = validarFormulario();
-        if (validacion) { setError(validacion); return; }
-
-        setGuardando(true);
         try {
-            const nuevo = await apiService.crearEspacio(conferenceId, formData);
-            setEspacios((prev) => [...prev, nuevo]);
-            setExito('Espacio creado correctamente.');
-            setFormData({ day: '', room: '', topic: '', startTime: '', endTime: '', capacity: '10' });
-            setTimeout(() => setExito(''), 3500);
+            // 1. Crear la sala física/virtual
+            const salaCreada = await apiService.crearSala(conferenceId, {
+                name: formData.room,
+                capacity: formData.capacity,
+                type: 'PRESENCIAL', // o añadir un toggle en el form si lo deseas
+                topicHints: formData.topic
+            });
+
+            // 2. Crear la franja de tiempo asignada a esa sala
+            await apiService.crearSlotAgenda(conferenceId, {
+                day: formData.day,
+                roomId: salaCreada.id, // Usamos el ID que devolvió el paso 1
+                topic: formData.topic,
+                startTime: `${formData.startTime}:00`, // El backend espera HH:MM:SS
+                endTime: `${formData.endTime}:00`,
+                maxPapers: formData.capacity
+            });
+
+            setExito('¡Espacio y franja horaria creados con éxito!');
+            setFormData({ ...formData, room: '', startTime: '', endTime: '' });
+
+            // En un flujo real, aquí llamarías de nuevo a obtener agenda/salas para refrescar la tabla
+            // cargarDatos(); 
+
+            setTimeout(() => setExito(''), 3000);
         } catch (err) {
-            setError(err.message || 'No fue posible crear el espacio.');
+            setError(err.message || 'Error al guardar el espacio.');
         } finally {
             setGuardando(false);
         }
