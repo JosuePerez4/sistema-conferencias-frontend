@@ -128,3 +128,21 @@
 .navbar-register:hover {
   background: #4338ca;
 }
+
+.navbar-logout {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: inherit;
+  padding: 0;
+}
+
+.navbar-logout:hover {
+  opacity: 0.75;
+}
+
+.navbar-username {
+  font-size: 0.85rem;
+  color: var(--color-text-muted, #666);
+  font-weight: 500;
+}

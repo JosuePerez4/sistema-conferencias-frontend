@@ -10,6 +10,10 @@ import CrearConferencia from './components/CrearConferencia';
 import EditarConferencia from './components/EditarConferencia';
 import EnviarArticulo from './components/EnviarArticulo';
 import DetalleArticulo from './components/DetalleArticulo';
+import BandejaEvaluacion from './components/BandejaEvaluacion';
+import EvaluarArticulo   from './components/EvaluarArticulo';
+import ProgramacionSalas from './components/ProgramacionSalas';
+import ConfigurarEspacios from './components/ConfigurarEspacios';
 
 function App() {
     return (
@@ -25,6 +29,10 @@ function App() {
                     <Route path="/editar-conferencia/:id" element={<EditarConferencia />} />
                     <Route path="/enviar-articulo/:conferenciaId" element={<EnviarArticulo />} />
                     <Route path="/conferencia/:conferenciaId/articulo/:paperId" element={<DetalleArticulo />} />
+                    <Route path="/conferencia/:conferenciaId/evaluaciones" element={<BandejaEvaluacion />} />
+                    <Route path="/conferencia/:conferenciaId/papers/:paperId/evaluar" element={<EvaluarArticulo />} />
+                    <Route path="/conferencia/:conferenciaId/programacion" element={<ProgramacionSalas />} />
+                    <Route path="/conferencia/:conferenceId/espacios" element={<ConfigurarEspacios />} />
                 </Routes>
             </Layout>
         </BrowserRouter>
