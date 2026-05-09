@@ -19,12 +19,6 @@ const getAuthHeaders = (isJson = true) => {
   return headers;
 };
 
-const getPaperHeaders = (isJson = true) => {
-  const headers = {};
-  if (isJson) headers['Content-Type'] = 'application/json';
-  return headers;
-};
-
 const papersBase = (conferenceId) =>
   `${PAPER_URL}/conference/${encodeURIComponent(conferenceId)}`;
 
@@ -96,6 +90,11 @@ export const apiService = {
 
   registro: async (datos) => {
     const uniqueDocumentNumber = `${Date.now().toString().slice(-8)}${Math.floor(Math.random() * 90) + 10}`;
+    const allowedRoles = new Set(['ADMIN', 'CHAIR', 'AUTHOR', 'ASISTANT']);
+    const role =
+      datos.role && allowedRoles.has(String(datos.role).toUpperCase())
+        ? String(datos.role).toUpperCase()
+        : 'AUTHOR';
     const bodyBackend = {
       documentType: "CC",
       documentNumber: uniqueDocumentNumber,
@@ -107,7 +106,7 @@ export const apiService = {
       institution: "Ninguna",
       country: "Colombia",
       city: "Desconocida",
-      role: "AUTHOR"
+      role
     };
     const response = await fetch(`${AUTH_URL}/register`, {
       method: 'POST',
@@ -204,6 +203,7 @@ export const apiService = {
     }
     const response = await fetch(`${papersBase(conferenceId)}/create`, {
       method: 'POST',
+      headers: getAuthHeaders(false),
       body: formData,
     });
     if (!response.ok) throw new Error(await parseError(response, 'Error al crear paper'));
@@ -224,7 +224,7 @@ export const apiService = {
     const query = status ? `?status=${encodeURIComponent(status)}` : '';
     const response = await fetch(`${papersBase(conferenceId)}/list${query}`, {
       method: 'GET',
-      headers: getPaperHeaders()
+      headers: getAuthHeaders(false)
     });
     if (!response.ok) throw new Error(await parseError(response, 'Error al obtener papers'));
     return response.json();
@@ -233,7 +233,7 @@ export const apiService = {
   obtenerPaper: async (conferenceId, paperId) => {
     const response = await fetch(`${papersBase(conferenceId)}/${encodeURIComponent(paperId)}`, {
       method: 'GET',
-      headers: getPaperHeaders()
+      headers: getAuthHeaders(false)
     });
     if (!response.ok) throw new Error(await parseError(response, 'Error al obtener el paper'));
     return response.json();
@@ -263,7 +263,7 @@ export const apiService = {
       `${papersBase(conferenceId)}/${encodeURIComponent(paperId)}/attachments`,
       {
         method: 'POST',
-        headers: getPaperHeaders(false),
+        headers: getAuthHeaders(false),
         body: formData,
       }
     );
@@ -275,7 +275,7 @@ export const apiService = {
     if (!conferenceId || !paperId || !attachmentId) throw new Error('conferenceId, paperId y attachmentId son obligatorios.');
     const response = await fetch(
       `${papersBase(conferenceId)}/${encodeURIComponent(paperId)}/attachments/${encodeURIComponent(attachmentId)}`,
-      { method: 'GET', headers: getPaperHeaders(false) }
+      { method: 'GET', headers: getAuthHeaders(false) }
     );
     if (!response.ok) throw new Error(await parseError(response, 'Error al descargar el adjunto'));
     const blob = await response.blob();
@@ -291,7 +291,7 @@ export const apiService = {
     formData.append('file', file, file.name);
     const response = await fetch(`${FILE_URL}/upload/${encodeURIComponent(conferenceId)}`, {
       method: 'POST',
-      headers: getPaperHeaders(false),
+      headers: getAuthHeaders(false),
       body: formData,
     });
     if (!response.ok) throw new Error(await parseError(response, 'Error al subir archivo'));
@@ -301,7 +301,7 @@ export const apiService = {
   listarArchivosConferencia: async (conferenceId) => {
     const response = await fetch(`${FILE_URL}/list/${encodeURIComponent(conferenceId)}`, {
       method: 'GET',
-      headers: getPaperHeaders()
+      headers: getAuthHeaders(false)
     });
     if (!response.ok) throw new Error(await parseError(response, 'Error al listar archivos'));
     return response.json();
@@ -311,7 +311,7 @@ export const apiService = {
     if (!conferenceId || !fileId) throw new Error('conferenceId y fileId son obligatorios para descargar el archivo.');
     const response = await fetch(
       `${FILE_URL}/${encodeURIComponent(conferenceId)}/download/${encodeURIComponent(fileId)}`,
-      { method: 'GET', headers: getPaperHeaders(false) }
+      { method: 'GET', headers: getAuthHeaders(false) }
     );
     if (!response.ok) throw new Error(await parseError(response, 'Error al descargar el archivo'));
     const blob = await response.blob();
@@ -323,7 +323,7 @@ export const apiService = {
   eliminarArchivoConferencia: async (fileId) => {
     const response = await fetch(`${FILE_URL}/delete/${encodeURIComponent(fileId)}`, {
       method: 'DELETE',
-      headers: getPaperHeaders()
+      headers: getAuthHeaders(false)
     });
     if (!response.ok) throw new Error(await parseError(response, 'Error al eliminar archivo'));
     if (response.status === 204) return { ok: true };

@@ -396,7 +396,7 @@ const DetalleArticulo = () => {
             </form>
           </section>
 
-          <section>
+          <section id="evaluar-articulo">
             <h3 className="detalle-section-title">Evaluar artículo</h3>
             <p className="detalle-section-hint">
               Elige el nuevo estado del artículo y, si quieres, deja observaciones para el autor.

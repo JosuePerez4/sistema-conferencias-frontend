@@ -54,7 +54,7 @@ export default function BandejaEvaluacion() {
               <button
                 className="be-btn-evaluar"
                 onClick={() =>
-                  navigate(`/conferencia/${conferenciaId}/papers/${paper.id}/evaluar`)
+                  navigate(`/conferencia/${conferenciaId}/articulo/${paper.id}#evaluar-articulo`)
                 }
               >
                 Evaluar
