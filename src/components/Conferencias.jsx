@@ -1,7 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { apiService } from '../services/api';
 import '../styles/components/conferencias.css';
+
 
 const Conferencias = () => {
     const imagenFallback = 'https://images.unsplash.com/photo-1475721027785-f74eccf877e2?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
@@ -10,6 +11,9 @@ const Conferencias = () => {
     const [eventosFiltrados, setEventosFiltrados] = useState([]);
     const [cargando, setCargando] = useState(true);
     const [error, setError] = useState('');
+    const navigate = useNavigate();
+    const [estaLogueado] = useState(() => Boolean(localStorage.getItem('accessToken')));
+
     const formatearFecha = (fecha) => {
         if (!fecha) return 'Fecha por confirmar';
         const valor = String(fecha);
@@ -85,20 +89,16 @@ const Conferencias = () => {
             setEventosFiltrados(eventos);
             return;
         }
-
         const resultados = eventos.filter((evento) => {
             const tituloMinuscula = evento.titulo.toLowerCase();
             const categoriaMinuscula = evento.categoria.toLowerCase();
             return tituloMinuscula.includes(terminoBusquedaNormalizado) || categoriaMinuscula.includes(terminoBusquedaNormalizado);
         });
-
         setEventosFiltrados(resultados);
     };
 
     const handleKeyDown = (e) => {
-        if (e.key === 'Enter') {
-            handleBuscar();
-        }
+        if (e.key === 'Enter') handleBuscar();
     };
 
     const handleLimpiar = () => {
@@ -144,9 +144,7 @@ const Conferencias = () => {
             </div>
 
             {cargando && (
-                <div className="conferencias-loading">
-                    Cargando conferencias...
-                </div>
+                <div className="conferencias-loading">Cargando conferencias...</div>
             )}
 
             {error && !cargando && (
@@ -178,18 +176,12 @@ const Conferencias = () => {
                                 <div className="conferencias-card-body">
                                     <div className="conferencias-card-meta">
                                         <p className="conferencias-card-date">{evento.fecha}</p>
-                                        <span className="conferencias-card-price">
-                                            {evento.precio}
-                                        </span>
+                                        <span className="conferencias-card-price">{evento.precio}</span>
                                     </div>
 
-                                    <h3 className="conferencias-card-title">
-                                        {evento.titulo}
-                                    </h3>
+                                    <h3 className="conferencias-card-title">{evento.titulo}</h3>
 
-                                    <p className="conferencias-card-place">
-                                        📍 {evento.lugar}
-                                    </p>
+                                    <p className="conferencias-card-place">📍 {evento.lugar}</p>
                                     <p className="conferencias-card-mode">
                                         <span className={`conferencias-card-mode-pill conferencias-card-mode-pill--${evento.modalidadClase}`}>
                                             {evento.modalidad}
@@ -212,6 +204,32 @@ const Conferencias = () => {
                                             <span className="conferencias-card-no-id">Detalle no disponible</span>
                                         )}
                                     </div>
+
+                                    {estaLogueado && evento.id && (
+                                        <div className="conferencias-card-acciones">
+                                            <button
+                                                type="button"
+                                                className="conferencias-card-accion-btn conferencias-card-accion-btn--evaluar"
+                                                onClick={() => navigate(`/conferencia/${evento.id}/evaluaciones`)}
+                                            >
+                                                📋 Evaluar artículos
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className="conferencias-card-accion-btn conferencias-card-accion-btn--programacion"
+                                                onClick={() => navigate(`/conferencia/${evento.id}/programacion`)}
+                                            >
+                                                🗓️ Programación
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className="conferencias-card-accion-btn conferencias-card-accion-btn--espacios"
+                                                onClick={() => navigate(`/conferencia/${evento.id}/espacios`)}
+                                            >
+                                                🏛️ Configurar espacios
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         ))

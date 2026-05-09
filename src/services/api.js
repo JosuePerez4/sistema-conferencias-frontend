@@ -14,14 +14,11 @@ const getToken = () => localStorage.getItem('accessToken');
 const getAuthHeaders = (isJson = true) => {
   const headers = {};
   if (isJson) headers['Content-Type'] = 'application/json';
-
   const token = getToken();
   if (token) headers.Authorization = `Bearer ${token}`;
-
   return headers;
 };
 
-/** Papers/files en este microservicio: permitAll; sin Authorization (contrato actual). */
 const getPaperHeaders = (isJson = true) => {
   const headers = {};
   if (isJson) headers['Content-Type'] = 'application/json';
@@ -77,15 +74,10 @@ const parseError = async (response, fallbackMessage) => {
 
 const normalizeStringList = (value) => {
   if (Array.isArray(value)) {
-    return value
-      .map((item) => String(item).trim())
-      .filter(Boolean);
+    return value.map((item) => String(item).trim()).filter(Boolean);
   }
   if (typeof value !== 'string') return [];
-  return value
-    .split(',')
-    .map((item) => item.trim())
-    .filter(Boolean);
+  return value.split(',').map((item) => item.trim()).filter(Boolean);
 };
 
 export const apiService = {
@@ -98,14 +90,12 @@ export const apiService = {
         password: credenciales.password
       }),
     });
-
     if (!response.ok) throw new Error(await parseError(response, 'Error al iniciar sesión'));
     return response.json();
   },
 
   registro: async (datos) => {
     const uniqueDocumentNumber = `${Date.now().toString().slice(-8)}${Math.floor(Math.random() * 90) + 10}`;
-
     const bodyBackend = {
       documentType: "CC",
       documentNumber: uniqueDocumentNumber,
@@ -119,17 +109,12 @@ export const apiService = {
       city: "Desconocida",
       role: "AUTHOR"
     };
-
     const response = await fetch(`${AUTH_URL}/register`, {
       method: 'POST',
       headers: getAuthHeaders(),
       body: JSON.stringify(bodyBackend),
     });
-
-    if (!response.ok) {
-      throw new Error(await parseError(response, 'Error en el registro'));
-    }
-
+    if (!response.ok) throw new Error(await parseError(response, 'Error en el registro'));
     return response.json();
   },
 
@@ -138,7 +123,6 @@ export const apiService = {
       method: 'GET',
       headers: getAuthHeaders()
     });
-
     if (!response.ok) throw new Error(await parseError(response, 'Error al obtener conferencias'));
     return response.json();
   },
@@ -157,13 +141,11 @@ export const apiService = {
       speakers: normalizeStringList(datos.speakers),
       state: datos.state
     };
-
     const response = await fetch(`${CONF_URL}/create`, {
       method: 'POST',
       headers: getAuthHeaders(),
       body: JSON.stringify(bodyBackend),
     });
-
     if (!response.ok) throw new Error(await parseError(response, 'Error al crear conferencia'));
     return response.json();
   },
@@ -173,7 +155,6 @@ export const apiService = {
       method: 'GET',
       headers: getAuthHeaders()
     });
-
     if (!response.ok) throw new Error(await parseError(response, 'Error al obtener la conferencia'));
     return response.json();
   },
@@ -193,13 +174,11 @@ export const apiService = {
       speakers: normalizeStringList(datos.speakers),
       state: datos.state
     };
-
     const response = await fetch(`${CONF_URL}/edit/${encodeURIComponent(id)}`, {
       method: 'PUT',
       headers: getAuthHeaders(),
       body: JSON.stringify(bodyBackend),
     });
-
     if (!response.ok) throw new Error(await parseError(response, 'Error al editar conferencia'));
     return response.json();
   },
@@ -209,16 +188,11 @@ export const apiService = {
       method: 'DELETE',
       headers: getAuthHeaders()
     });
-
     if (!response.ok) throw new Error(await parseError(response, 'Error al eliminar conferencia'));
     if (response.status === 204) return { ok: true };
     return response.json().catch(() => ({ ok: true }));
   },
 
-  /**
-   * POST /papers/conference/{conferenceId}/create
-   * multipart/form-data: parte "paper" = JSON (PaperCreateDto), partes "files" = adjuntos iniciales (opcional).
-   */
   crearPaper: async (conferenceId, paperDto, archivosIniciales = []) => {
     const formData = new FormData();
     formData.append(
@@ -228,79 +202,63 @@ export const apiService = {
     for (const file of archivosIniciales) {
       formData.append('files', file, file.name);
     }
-
     const response = await fetch(`${papersBase(conferenceId)}/create`, {
       method: 'POST',
       body: formData,
     });
-
     if (!response.ok) throw new Error(await parseError(response, 'Error al crear paper'));
     return response.json();
   },
 
-  /** GET /papers/conference/{conferenceId}/evaluations-tray */
+  // ✅ CORREGIDO: usa getAuthHeaders para enviar el token
   obtenerBandejaEvaluacion: async (conferenceId) => {
     const response = await fetch(`${papersBase(conferenceId)}/evaluations-tray`, {
       method: 'GET',
-      headers: getPaperHeaders()
+      headers: getAuthHeaders()
     });
-
     if (!response.ok) throw new Error(await parseError(response, 'Error al obtener bandeja de evaluación'));
     return response.json();
   },
 
-  /** GET /papers/conference/{conferenceId}/list (?status=) */
   obtenerPapers: async (conferenceId, status) => {
     const query = status ? `?status=${encodeURIComponent(status)}` : '';
     const response = await fetch(`${papersBase(conferenceId)}/list${query}`, {
       method: 'GET',
       headers: getPaperHeaders()
     });
-
     if (!response.ok) throw new Error(await parseError(response, 'Error al obtener papers'));
     return response.json();
   },
 
-  /** GET /papers/conference/{conferenceId}/{paperId} */
   obtenerPaper: async (conferenceId, paperId) => {
     const response = await fetch(`${papersBase(conferenceId)}/${encodeURIComponent(paperId)}`, {
       method: 'GET',
       headers: getPaperHeaders()
     });
-
     if (!response.ok) throw new Error(await parseError(response, 'Error al obtener el paper'));
     return response.json();
   },
 
-  /** PATCH /papers/conference/{conferenceId}/{paperId}/evaluations */
   evaluarPaper: async (conferenceId, paperId, evaluacion) => {
     const response = await fetch(
       `${papersBase(conferenceId)}/${encodeURIComponent(paperId)}/evaluations`,
       {
         method: 'PATCH',
-        headers: getPaperHeaders(),
+        headers: getAuthHeaders(),
         body: JSON.stringify(evaluacion),
       }
     );
-
     if (!response.ok) throw new Error(await parseError(response, 'Error al evaluar paper'));
     return response.json();
   },
 
-  /** POST /papers/conference/{conferenceId}/{paperId}/attachments */
   subirAdjuntosPaper: async (conferenceId, paperId, files) => {
-    if (!conferenceId || !paperId) {
-      throw new Error('conferenceId y paperId son obligatorios.');
-    }
-    if (!files?.length) {
-      throw new Error('Selecciona al menos un archivo.');
-    }
-
+    if (!conferenceId || !paperId) throw new Error('conferenceId y paperId son obligatorios.');
+    if (!files?.length) throw new Error('Selecciona al menos un archivo.');
     const formData = new FormData();
     for (const file of files) {
       formData.append('files', file, file.name);
     }
-
     const response = await fetch(
       `${papersBase(conferenceId)}/${encodeURIComponent(paperId)}/attachments`,
       {
@@ -309,51 +267,33 @@ export const apiService = {
         body: formData,
       }
     );
-
     if (!response.ok) throw new Error(await parseError(response, 'Error al subir adjuntos'));
     return response.json().catch(() => ({}));
   },
 
-  /** GET /papers/conference/{conferenceId}/{paperId}/attachments/{attachmentId} */
   descargarAdjuntoPaperBlob: async (conferenceId, paperId, attachmentId, nombreSugerido) => {
-    if (!conferenceId || !paperId || !attachmentId) {
-      throw new Error('conferenceId, paperId y attachmentId son obligatorios.');
-    }
+    if (!conferenceId || !paperId || !attachmentId) throw new Error('conferenceId, paperId y attachmentId son obligatorios.');
     const response = await fetch(
       `${papersBase(conferenceId)}/${encodeURIComponent(paperId)}/attachments/${encodeURIComponent(attachmentId)}`,
-      {
-        method: 'GET',
-        headers: getPaperHeaders(false),
-      }
+      { method: 'GET', headers: getPaperHeaders(false) }
     );
-
-    if (!response.ok) {
-      throw new Error(await parseError(response, 'Error al descargar el adjunto'));
-    }
+    if (!response.ok) throw new Error(await parseError(response, 'Error al descargar el adjunto'));
     const blob = await response.blob();
     const disposition = response.headers.get('Content-Disposition') || '';
     const filename = resolveFilenameFromDisposition(disposition, nombreSugerido || 'adjunto');
     return { blob, filename };
   },
 
-  /** POST /files/upload/{conferenceId} (multipart, campo file) */
   subirArchivoConferencia: async (conferenceId, file) => {
-    if (!conferenceId) {
-      throw new Error('conferenceId es obligatorio para subir archivos.');
-    }
-    if (!file) {
-      throw new Error('Debes seleccionar un archivo para subir.');
-    }
-
+    if (!conferenceId) throw new Error('conferenceId es obligatorio para subir archivos.');
+    if (!file) throw new Error('Debes seleccionar un archivo para subir.');
     const formData = new FormData();
     formData.append('file', file, file.name);
-
     const response = await fetch(`${FILE_URL}/upload/${encodeURIComponent(conferenceId)}`, {
       method: 'POST',
       headers: getPaperHeaders(false),
       body: formData,
     });
-
     if (!response.ok) throw new Error(await parseError(response, 'Error al subir archivo'));
     return response.json();
   },
@@ -363,27 +303,17 @@ export const apiService = {
       method: 'GET',
       headers: getPaperHeaders()
     });
-
     if (!response.ok) throw new Error(await parseError(response, 'Error al listar archivos'));
     return response.json();
   },
 
-  /** GET /files/{conferenceId}/download/{fileId} */
   descargarArchivoConferenciaBlob: async (conferenceId, fileId, nombreSugerido) => {
-    if (!conferenceId || !fileId) {
-      throw new Error('conferenceId y fileId son obligatorios para descargar el archivo.');
-    }
+    if (!conferenceId || !fileId) throw new Error('conferenceId y fileId son obligatorios para descargar el archivo.');
     const response = await fetch(
       `${FILE_URL}/${encodeURIComponent(conferenceId)}/download/${encodeURIComponent(fileId)}`,
-      {
-        method: 'GET',
-        headers: getPaperHeaders(false),
-      }
+      { method: 'GET', headers: getPaperHeaders(false) }
     );
-
-    if (!response.ok) {
-      throw new Error(await parseError(response, 'Error al descargar el archivo'));
-    }
+    if (!response.ok) throw new Error(await parseError(response, 'Error al descargar el archivo'));
     const blob = await response.blob();
     const disposition = response.headers.get('Content-Disposition') || '';
     const filename = resolveFilenameFromDisposition(disposition, nombreSugerido || 'file');
@@ -395,13 +325,12 @@ export const apiService = {
       method: 'DELETE',
       headers: getPaperHeaders()
     });
-
     if (!response.ok) throw new Error(await parseError(response, 'Error al eliminar archivo'));
     if (response.status === 204) return { ok: true };
     return response.json();
   },
 
-  // ─── Room Service (Salas) ───────────────────────────────────────────────
+  // ─── Room Service ────────────────────────────────────────────────────────
   crearSala: async (conferenceId, datos) => {
     const response = await fetch(`${ROOM_URL}/conference/${encodeURIComponent(conferenceId)}`, {
       method: 'POST',
@@ -427,7 +356,7 @@ export const apiService = {
     return response.json();
   },
 
-  // ─── Schedule Service (Agenda) ──────────────────────────────────────────
+  // ─── Schedule Service ────────────────────────────────────────────────────
   crearSlotAgenda: async (conferenceId, datos) => {
     const response = await fetch(`${SCHEDULE_URL}/slots/conference/${encodeURIComponent(conferenceId)}`, {
       method: 'POST',
@@ -454,7 +383,16 @@ export const apiService = {
     return response.json();
   },
 
-  // ─── Notification Service (Notificaciones) - Para Req 2 ─────────────────
+  obtenerAgendaPorSala: async (conferenceId, roomId) => {
+    const response = await fetch(
+      `${SCHEDULE_URL}/conference/${encodeURIComponent(conferenceId)}/room/${encodeURIComponent(roomId)}`,
+      { method: 'GET', headers: getAuthHeaders() }
+    );
+    if (!response.ok) throw new Error(await parseError(response, 'Error al obtener agenda por sala'));
+    return response.json();
+  },
+
+  // ─── Notification Service ────────────────────────────────────────────────
   obtenerNotificacionesPaper: async (paperId) => {
     const response = await fetch(`${NOTIF_URL}/paper/${encodeURIComponent(paperId)}`, {
       method: 'GET',

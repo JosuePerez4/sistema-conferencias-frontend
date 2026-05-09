@@ -338,3 +338,37 @@
   cursor: pointer;
   text-decoration: underline;
 }
+
+.conferencias-card-acciones {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  flex-wrap: wrap;
+}
+.conferencias-card-accion-btn {
+  flex: 1;
+  padding: 0.45rem 0.75rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+  white-space: nowrap;
+}
+.conferencias-card-accion-btn:active { transform: scale(0.97); }
+.conferencias-card-accion-btn--evaluar {
+  background: #eff6ff;
+  color: #2563eb;
+}
+.conferencias-card-accion-btn--evaluar:hover { background: #dbeafe; }
+.conferencias-card-accion-btn--programacion {
+  background: #f0fdf4;
+  color: #16a34a;
+}
+.conferencias-card-accion-btn--programacion:hover { background: #dcfce7; }
+.conferencias-card-accion-btn--espacios {
+  background: #faf5ff;
+  color: #7c3aed;
+}
+.conferencias-card-accion-btn--espacios:hover { background: #ede9fe; }
