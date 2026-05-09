@@ -39,3 +39,13 @@
 .home-cta:hover {
   background: #4338ca;
 }
+
+.home-cta-secondary {
+  background: #ffffff;
+  color: #4f46e5;
+  border: 2px solid #4f46e5;
+}
+
+.home-cta-secondary:hover {
+  background: #eef2ff;
+}

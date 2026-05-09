@@ -34,6 +34,7 @@ const Navbar = () => {
         <div className="navbar-links">
           <Link to="/" className="navbar-link">Inicio</Link>
           <Link to="/conferencias" className="navbar-link">Conferencias</Link>
+          <Link to="/salas" className="navbar-link">Salas</Link>
           <Link to="/crear-conferencia" className="navbar-link-create">
             <span className="navbar-link-create-icon">+</span> Crear Evento
           </Link>

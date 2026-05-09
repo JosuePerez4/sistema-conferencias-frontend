@@ -10,7 +10,8 @@ const Registro = () => {
     correo: '',
     telefono: '',
     password: '',
-    tipoCuenta: 'Asistente'
+    /** Valores iguales al enum Role del auth: ADMIN, CHAIR, AUTHOR, ASISTANT */
+    role: 'AUTHOR'
   });
 
   const [terminosAceptados, setTerminosAceptados] = useState(false);
@@ -150,17 +151,18 @@ const Registro = () => {
             </div>
 
             <div>
-              <label className="sf-label" htmlFor="reg-tipo">Tipo de cuenta</label>
+              <label className="sf-label" htmlFor="reg-tipo">Rol en el sistema</label>
               <select
                 id="reg-tipo"
-                name="tipoCuenta"
-                value={formData.tipoCuenta}
+                name="role"
+                value={formData.role}
                 onChange={handleChange}
                 className="sf-select registro-input-bg"
               >
-                <option value="Asistente">Asistente</option>
-                <option value="Ponente">Ponente / Speaker</option>
-                <option value="Organizador">Organizador</option>
+                <option value="AUTHOR">Autor (envía artículos)</option>
+                <option value="ASISTANT">Asistente (evaluación / apoyo)</option>
+                <option value="CHAIR">Chair (organizador de la conferencia)</option>
+                <option value="ADMIN">Administrador</option>
               </select>
             </div>
 

@@ -15,6 +15,9 @@ const Home = () => {
                 <Link to="/conferencias" className="home-cta">
                     Explorar Conferencias
                 </Link>
+                <Link to="/salas" className="home-cta home-cta-secondary">
+                    Ver Salas
+                </Link>
             </div>
         </div>
     );

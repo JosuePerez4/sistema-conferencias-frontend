@@ -1,0 +1,381 @@
+/* ── Contenedor principal ─────────────────────────────────────────────────── */
+.sc-container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+    font-family: 'Satoshi', 'Inter', sans-serif;
+}
+
+.sc-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 40vh;
+    font-size: 1rem;
+    color: var(--color-text-muted, #7a7974);
+    font-family: 'Satoshi', 'Inter', sans-serif;
+}
+
+/* ── Header ───────────────────────────────────────────────────────────────── */
+.sc-back-link {
+    display: inline-block;
+    font-size: 0.875rem;
+    color: var(--color-primary, #01696f);
+    text-decoration: none;
+    margin-bottom: 0.75rem;
+    transition: opacity 180ms;
+}
+
+.sc-back-link:hover {
+    opacity: 0.7;
+}
+
+.sc-title {
+    font-size: clamp(1.5rem, 1.2rem + 1.25vw, 2.25rem);
+    font-weight: 700;
+    color: var(--color-text, #28251d);
+    margin-bottom: 0.25rem;
+}
+
+.sc-subtitle {
+    font-size: 0.9rem;
+    color: var(--color-text-muted, #7a7974);
+    margin-bottom: 1.5rem;
+}
+
+/* ── Alertas ──────────────────────────────────────────────────────────────── */
+.sc-alert {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    font-size: 0.9rem;
+    margin-bottom: 1.25rem;
+}
+
+.sc-alert svg {
+    width: 1.1rem;
+    height: 1.1rem;
+    flex-shrink: 0;
+}
+
+.sc-alert-success {
+    background: #d4dfcc;
+    color: #1e3f0a;
+    border: 1px solid #b4ceaa;
+}
+
+.sc-alert-error {
+    background: #e0ced7;
+    color: #561740;
+    border: 1px solid #c9a8be;
+}
+
+/* ── Cabecera de sección (título + Crear sala) ─────────────────────────────── */
+.sc-section-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+}
+
+.sc-section-title--inline {
+    margin-bottom: 0;
+}
+
+.sc-btn-header {
+    width: auto;
+    flex-shrink: 0;
+}
+
+/* ── Panel de formulario colapsable ───────────────────────────────────────── */
+.sc-form-panel {
+    margin-bottom: 1.5rem;
+    padding: 1.25rem;
+    border-radius: 0.625rem;
+    border: 1px solid oklch(from #01696f l c h / 0.2);
+    background: var(--color-surface-2, #fbfbf9);
+}
+
+.sc-form-panel-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--color-text, #28251d);
+    margin: 0 0 1rem;
+}
+
+/* ── Tarjeta base ─────────────────────────────────────────────────────────── */
+.sc-card {
+    background: var(--color-surface, #f9f8f5);
+    border: 1px solid oklch(from #28251d l c h / 0.1);
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    box-shadow: 0 1px 2px oklch(0.2 0.01 80 / 0.06);
+}
+
+.sc-section-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-text, #28251d);
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* ── Badge contador ───────────────────────────────────────────────────────── */
+.sc-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.4rem;
+    height: 1.4rem;
+    padding: 0 0.4rem;
+    border-radius: 9999px;
+    background: var(--color-primary, #01696f);
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+/* ── Formulario ───────────────────────────────────────────────────────────── */
+.sc-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.sc-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.sc-field label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--color-text, #28251d);
+}
+
+.sc-input,
+.sc-select {
+    width: 100%;
+    padding: 0.55rem 0.75rem;
+    border: 1px solid oklch(from #28251d l c h / 0.15);
+    border-radius: 0.5rem;
+    font-size: 0.9rem;
+    background: var(--color-surface-2, #fbfbf9);
+    color: var(--color-text, #28251d);
+    transition: border-color 180ms, box-shadow 180ms;
+}
+
+.sc-input:focus,
+.sc-select:focus {
+    outline: none;
+    border-color: var(--color-primary, #01696f);
+    box-shadow: 0 0 0 3px oklch(from #01696f l c h / 0.15);
+}
+
+.sc-field-help {
+    font-size: 0.78rem;
+    color: var(--color-text-muted, #7a7974);
+}
+
+.sc-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+}
+
+.sc-form-actions {
+    margin-top: 0.5rem;
+}
+
+.sc-form-actions--row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    justify-content: flex-end;
+}
+
+.sc-btn-submit-inline {
+    width: auto;
+    min-width: 10rem;
+}
+
+/* ── Botones ──────────────────────────────────────────────────────────────── */
+.sc-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 0.6rem 1.25rem;
+    border-radius: 0.5rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: background 180ms, opacity 180ms;
+}
+
+.sc-btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.sc-btn-primary {
+    width: 100%;
+    background: var(--color-primary, #01696f);
+    color: #fff;
+}
+
+.sc-btn-primary:hover:not(:disabled) {
+    background: var(--color-primary-hover, #0c4e54);
+}
+
+.sc-btn-header.sc-btn-primary,
+.sc-btn-submit-inline.sc-btn-primary {
+    width: auto;
+}
+
+.sc-btn-secondary {
+    width: auto;
+    background: transparent;
+    color: var(--color-text, #28251d);
+    border: 1px solid oklch(from #28251d l c h / 0.2);
+}
+
+.sc-btn-secondary:hover:not(:disabled) {
+    background: oklch(from #28251d l c h / 0.06);
+}
+
+/* ── Grid de tarjetas de salas ────────────────────────────────────────────── */
+.sc-grid-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+/* ── Tarjeta individual de sala ───────────────────────────────────────────── */
+.sc-room-card {
+    background: var(--color-surface-2, #fbfbf9);
+    border: 1px solid oklch(from #28251d l c h / 0.1);
+    border-radius: 0.625rem;
+    padding: 1rem 1.25rem;
+    transition: border-color 200ms, box-shadow 200ms;
+}
+
+.sc-room-card:hover {
+    border-color: var(--color-primary, #01696f);
+    box-shadow: 0 2px 8px oklch(from #01696f l c h / 0.08);
+}
+
+.sc-room-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.sc-room-name {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-text, #28251d);
+    margin: 0;
+}
+
+.sc-room-type {
+    display: inline-block;
+    padding: 0.15rem 0.6rem;
+    border-radius: 9999px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    flex-shrink: 0;
+}
+
+.sc-room-type--presencial {
+    background: var(--color-primary-highlight, #cedcd8);
+    color: var(--color-primary-active, #0f3638);
+}
+
+.sc-room-type--virtual {
+    background: #d5dff0;
+    color: #1a365d;
+}
+
+.sc-room-type--hibrida {
+    background: #f5e4c9;
+    color: #6b3e00;
+}
+
+.sc-room-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+}
+
+.sc-room-detail {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.85rem;
+    color: var(--color-text, #28251d);
+}
+
+.sc-room-detail svg {
+    width: 0.95rem;
+    height: 0.95rem;
+    color: var(--color-text-muted, #7a7974);
+    flex-shrink: 0;
+}
+
+.sc-room-topics {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-top: 0.35rem;
+}
+
+/* ── Chip de tópico ───────────────────────────────────────────────────────── */
+.sc-chip {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    background: var(--color-primary-highlight, #cedcd8);
+    color: var(--color-primary-active, #0f3638);
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+/* ── Estado vacío ─────────────────────────────────────────────────────────── */
+.sc-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--color-text-muted, #7a7974);
+}
+
+.sc-empty svg {
+    width: 2.5rem;
+    height: 2.5rem;
+    color: var(--color-text-faint, #bab9b4);
+    margin-bottom: 0.75rem;
+}
+
+.sc-empty p {
+    font-weight: 500;
+    color: var(--color-text, #28251d);
+    margin-bottom: 0.25rem;
+}
+
+.sc-empty span {
+    font-size: 0.85rem;
+}
