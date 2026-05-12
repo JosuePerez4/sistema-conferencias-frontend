@@ -29,6 +29,16 @@ const Login = () => {
 
             if (respuesta?.accessToken) {
                 localStorage.setItem('accessToken', respuesta.accessToken);
+                try {
+                    let payloadBase64 = respuesta.accessToken.split('.')[1];
+                    payloadBase64 = payloadBase64.replace(/-/g, '+').replace(/_/g, '/');
+                    const payloadDecoded = JSON.parse(atob(payloadBase64));
+                    if (payloadDecoded.role) {
+                        localStorage.setItem('userRole', payloadDecoded.role);
+                    }
+                } catch (e) {
+                    console.error('Error al decodificar token JWT', e);
+                }
             }
             if (respuesta?.name) {
                 localStorage.setItem('userName', respuesta.name);

@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import '../styles/components/home.css';
 
 const Home = () => {
+    const userRole = localStorage.getItem('userRole') || '';
+
     return (
         <div className="home">
             <h1 className="home-title">
@@ -15,9 +17,11 @@ const Home = () => {
                 <Link to="/conferencias" className="home-cta">
                     Explorar Conferencias
                 </Link>
-                <Link to="/salas" className="home-cta home-cta-secondary">
-                    Ver Salas
-                </Link>
+                {userRole === 'ADMIN' && (
+                    <Link to="/salas" className="home-cta home-cta-secondary">
+                        Ver Salas
+                    </Link>
+                )}
             </div>
         </div>
     );

@@ -26,6 +26,7 @@ function EvaluarArticuloRedirect() {
 import ConfigurarEspacios from './components/ConfigurarEspacios';
 import SalasConferencia from './components/SalasConferencia';
 import Salas from './components/Salas';
+import InscripcionAsistente from './components/InscripcionAsistente';
 
 function App() {
     return (
@@ -38,6 +39,7 @@ function App() {
                     <Route path="/conferencias" element={<Conferencias />} />
                     <Route path="/salas" element={<Salas />} />
                     <Route path="/conferencia/:id" element={<LandingConferencia />} />
+                    <Route path="/conferencia/:id/inscripcion" element={<InscripcionAsistente />} />
                     <Route path="/crear-conferencia" element={<CrearConferencia />} />
                     <Route path="/editar-conferencia/:id" element={<EditarConferencia />} />
                     <Route path="/enviar-articulo/:conferenciaId" element={<EnviarArticulo />} />

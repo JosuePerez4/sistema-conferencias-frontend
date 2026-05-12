@@ -13,6 +13,7 @@ const Conferencias = () => {
     const [error, setError] = useState('');
     const navigate = useNavigate();
     const [estaLogueado] = useState(() => Boolean(localStorage.getItem('accessToken')));
+    const [userRole] = useState(() => localStorage.getItem('userRole') || '');
 
     const formatearFecha = (fecha) => {
         if (!fecha) return 'Fecha por confirmar';
@@ -205,28 +206,14 @@ const Conferencias = () => {
                                         )}
                                     </div>
 
-                                    {estaLogueado && evento.id && (
+                                    {estaLogueado && evento.id && (userRole === 'ADMIN' || userRole === 'CHAIR') && (
                                         <div className="conferencias-card-acciones">
-                                            <button
-                                                type="button"
-                                                className="conferencias-card-accion-btn conferencias-card-accion-btn--evaluar"
-                                                onClick={() => navigate(`/conferencia/${evento.id}/evaluaciones`)}
-                                            >
-                                                📋 Evaluar artículos
-                                            </button>
                                             <button
                                                 type="button"
                                                 className="conferencias-card-accion-btn conferencias-card-accion-btn--programacion"
                                                 onClick={() => navigate(`/conferencia/${evento.id}/programacion`)}
                                             >
-                                                🗓️ Programación
-                                            </button>
-                                            <button
-                                                type="button"
-                                                className="conferencias-card-accion-btn conferencias-card-accion-btn--espacios"
-                                                onClick={() => navigate(`/conferencia/${evento.id}/espacios`)}
-                                            >
-                                                🏛️ Configurar espacios
+                                                🗓️ Ver programación
                                             </button>
                                         </div>
                                     )}

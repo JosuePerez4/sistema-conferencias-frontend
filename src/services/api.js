@@ -1,6 +1,7 @@
 const API_GATEWAY_URL =
   import.meta.env.VITE_API_GATEWAY_URL ||
-  import.meta.env.API_GATEWAY_URL;
+  import.meta.env.API_GATEWAY_URL ||
+  'http://localhost:8080';
 const AUTH_URL = `${API_GATEWAY_URL}/api/v1/auth`;
 const CONF_URL = `${API_GATEWAY_URL}/conferences`;
 const PAPER_URL = `${API_GATEWAY_URL}/papers`;
@@ -371,6 +372,15 @@ export const apiService = {
       }),
     });
     if (!response.ok) throw new Error(await parseError(response, 'Error al crear slot de agenda'));
+    return response.json();
+  },
+
+  obtenerSlots: async (conferenceId) => {
+    const response = await fetch(`${SCHEDULE_URL}/slots/conference/${encodeURIComponent(conferenceId)}`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error(await parseError(response, 'Error al obtener franjas horarias'));
     return response.json();
   },
 
