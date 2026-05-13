@@ -13,6 +13,13 @@ const LandingConferencia = () => {
     const [userName] = useState(() => localStorage.getItem('userName') || '');
     const [estaLogueado] = useState(() => Boolean(localStorage.getItem('accessToken')));
     const [misArticulos, setMisArticulos] = useState([]);
+    const [estadoPagoAsistente, setEstadoPagoAsistente] = useState(null);
+    const [cargandoEstadoPago, setCargandoEstadoPago] = useState(false);
+
+    const esAsistente = useMemo(() => {
+        const r = (userRole || '').toUpperCase();
+        return r === 'ASISTANT' || r === 'ASSISTANT';
+    }, [userRole]);
 
     const formatearFecha = (fecha) => {
         if (!fecha) return 'Fecha por confirmar';
@@ -59,9 +66,27 @@ const LandingConferencia = () => {
             }
         };
 
+        const cargarEstadoPagoAsistente = async () => {
+            if (!estaLogueado || !esAsistente || !id) {
+                setEstadoPagoAsistente(null);
+                return;
+            }
+            setCargandoEstadoPago(true);
+            setEstadoPagoAsistente(null);
+            try {
+                const s = await apiService.obtenerEstadoPagoInscripcion(id);
+                setEstadoPagoAsistente(s);
+            } catch {
+                setEstadoPagoAsistente({ paid: false, registrationId: null, paymentStatus: null });
+            } finally {
+                setCargandoEstadoPago(false);
+            }
+        };
+
         cargarDetalle();
         cargarArticulosAutor();
-    }, [id, userRole, estaLogueado, userName]);
+        cargarEstadoPagoAsistente();
+    }, [id, userRole, estaLogueado, userName, esAsistente]);
 
     const detalle = useMemo(() => {
         if (!conferencia) return null;
@@ -224,11 +249,40 @@ const LandingConferencia = () => {
                                 <li>✓ Certificado de asistencia digital</li>
                                 <li>✓ Fiesta de Networking</li>
                             </ul>
-                            {userRole === 'ASISTANT' && (
-                                <Link to={`/conferencia/${id}/inscripcion`} className="landing-btn-primary">
-                                    Comprar Entrada
-                                </Link>
+                            {esAsistente && cargandoEstadoPago && (
+                                <p className="landing-price-desc" style={{ marginTop: '0.75rem' }}>
+                                    Consultando el estado de tu inscripción…
+                                </p>
                             )}
+                            {esAsistente && !cargandoEstadoPago && estadoPagoAsistente?.paid && (
+                                <p
+                                    className="landing-price-desc"
+                                    style={{ marginTop: '0.75rem', color: '#137333', fontWeight: 600 }}
+                                >
+                                    Tu inscripción está activa y el pago fue aprobado. ¡Nos vemos en el evento!
+                                </p>
+                            )}
+                            {esAsistente &&
+                                !cargandoEstadoPago &&
+                                estadoPagoAsistente &&
+                                !estadoPagoAsistente.paid &&
+                                estadoPagoAsistente.paymentStatus === 'PENDING' && (
+                                    <p
+                                        className="landing-price-desc"
+                                        style={{ marginTop: '0.75rem', color: '#b06000', fontWeight: 600 }}
+                                    >
+                                        Tu comprobante está en revisión. Te avisaremos cuando el pago quede aprobado.
+                                    </p>
+                                )}
+                            {esAsistente &&
+                                !cargandoEstadoPago &&
+                                estadoPagoAsistente &&
+                                !estadoPagoAsistente.paid &&
+                                estadoPagoAsistente.paymentStatus !== 'PENDING' && (
+                                    <Link to={`/conferencia/${id}/inscripcion`} className="landing-btn-primary">
+                                        Comprar Entrada
+                                    </Link>
+                                )}
                             {userRole === 'ADMIN' && (
                                 <Link to={`/editar-conferencia/${id}`} className="landing-btn-secondary">
                                     Editar Conferencia

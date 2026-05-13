@@ -9,6 +9,7 @@ const FILE_URL = `${API_GATEWAY_URL}/files`;
 const ROOM_URL = `${API_GATEWAY_URL}/rooms`;
 const SCHEDULE_URL = `${API_GATEWAY_URL}/schedule`;
 const NOTIF_URL = `${API_GATEWAY_URL}/notifications`;
+const REG_URL = `${API_GATEWAY_URL}/registrations`;
 
 const getToken = () => localStorage.getItem('accessToken');
 
@@ -400,6 +401,42 @@ export const apiService = {
     );
     if (!response.ok) throw new Error(await parseError(response, 'Error al obtener agenda por sala'));
     return response.json();
+  },
+
+  /**
+   * Estado de pago/inscripción del usuario autenticado para una conferencia.
+   * @returns {Promise<{ paid: boolean, registrationId: string|null, paymentStatus: 'PENDING'|'APPROVED'|null }>}
+   */
+  obtenerEstadoPagoInscripcion: async (conferenceId) => {
+    if (!conferenceId) throw new Error('Identificador de conferencia no válido.');
+    const response = await fetch(
+      `${REG_URL}/payment-status?conferenceId=${encodeURIComponent(conferenceId)}`,
+      { method: 'GET', headers: getAuthHeaders() }
+    );
+    if (!response.ok) throw new Error(await parseError(response, 'Error al consultar el estado de pago'));
+    return response.json();
+  },
+
+  /** Pago simulado de inscripción (multipart: conferenceId, file). Requiere JWT con rol asistente. */
+  enviarPagoInscripcion: async (conferenceId, file) => {
+    if (!conferenceId) throw new Error('Identificador de conferencia no válido.');
+    if (!file) throw new Error('Debes adjuntar el comprobante de pago.');
+    const formData = new FormData();
+    formData.append('conferenceId', conferenceId);
+    formData.append('file', file, file.name);
+    const response = await fetch(`${REG_URL}/pay`, {
+      method: 'POST',
+      headers: getAuthHeaders(false),
+      body: formData,
+    });
+    if (!response.ok) throw new Error(await parseError(response, 'Error al enviar el pago'));
+    const text = await response.text();
+    if (!text) return {};
+    try {
+      return JSON.parse(text);
+    } catch {
+      return { raw: text };
+    }
   },
 
   // ─── Notification Service ────────────────────────────────────────────────
