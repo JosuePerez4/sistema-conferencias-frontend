@@ -1,6 +1,12 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { apiService } from '../services/api';
 import '../styles/components/landing-conferencia.css'; // Podemos reusar algunos estilos
+
+const esRolAsistente = () => {
+    const r = (localStorage.getItem('userRole') || '').toUpperCase();
+    return r === 'ASISTANT' || r === 'ASSISTANT';
+};
 
 const InscripcionAsistente = () => {
     const { id } = useParams();
@@ -8,6 +14,30 @@ const InscripcionAsistente = () => {
     const [enviando, setEnviando] = useState(false);
     const [exito, setExito] = useState(false);
     const [error, setError] = useState('');
+    const [consultandoEstadoPago, setConsultandoEstadoPago] = useState(true);
+    const [estadoPago, setEstadoPago] = useState(null);
+
+    useEffect(() => {
+        if (!id || !localStorage.getItem('accessToken')) {
+            setConsultandoEstadoPago(false);
+            return;
+        }
+        let cancelado = false;
+        (async () => {
+            setConsultandoEstadoPago(true);
+            try {
+                const s = await apiService.obtenerEstadoPagoInscripcion(id);
+                if (!cancelado) setEstadoPago(s);
+            } catch {
+                if (!cancelado) setEstadoPago(null);
+            } finally {
+                if (!cancelado) setConsultandoEstadoPago(false);
+            }
+        })();
+        return () => {
+            cancelado = true;
+        };
+    }, [id]);
 
     const handleFileChange = (e) => {
         if (e.target.files && e.target.files.length > 0) {
@@ -15,22 +45,84 @@ const InscripcionAsistente = () => {
         }
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         if (!comprobante) {
             setError('Por favor adjunta una imagen del comprobante de pago.');
             return;
         }
 
+        if (!localStorage.getItem('accessToken')) {
+            setError('Debes iniciar sesión para enviar el comprobante.');
+            return;
+        }
+        if (!esRolAsistente()) {
+            setError('Solo las cuentas con rol de asistente pueden registrar el pago de inscripción.');
+            return;
+        }
+
         setError('');
         setEnviando(true);
 
-        // Simulamos la llamada al backend
-        setTimeout(() => {
-            setEnviando(false);
+        try {
+            await apiService.enviarPagoInscripcion(id, comprobante);
             setExito(true);
-        }, 2000);
+        } catch (err) {
+            setError(err.message || 'No se pudo enviar el comprobante. Intenta de nuevo.');
+        } finally {
+            setEnviando(false);
+        }
     };
+
+    if (consultandoEstadoPago) {
+        return (
+            <div className="landing-page" style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <p style={{ color: '#5f6368' }}>Consultando el estado de tu inscripción…</p>
+            </div>
+        );
+    }
+
+    if (estadoPago?.paid) {
+        return (
+            <div className="landing-page" style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center', backgroundColor: '#fff', padding: '3rem', borderRadius: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
+                    <div style={{ width: '80px', height: '80px', backgroundColor: '#e6f4ea', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem auto' }}>
+                        <svg style={{ color: '#137333', width: '40px', height: '40px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                    </div>
+                    <h2 style={{ fontSize: '1.75rem', color: '#202124', marginBottom: '1rem' }}>Inscripción activa</h2>
+                    <p style={{ color: '#5f6368', fontSize: '1.1rem', marginBottom: '2rem', lineHeight: '1.6' }}>
+                        Ya tienes una inscripción con pago aprobado para esta conferencia. Tu cupo está asegurado.
+                    </p>
+                    <Link to={`/conferencia/${id}`} className="landing-btn-primary" style={{ display: 'inline-block' }}>
+                        Volver a la Conferencia
+                    </Link>
+                </div>
+            </div>
+        );
+    }
+
+    if (estadoPago && !estadoPago.paid && estadoPago.paymentStatus === 'PENDING' && !exito) {
+        return (
+            <div className="landing-page" style={{ paddingTop: '3rem', minHeight: '80vh' }}>
+                <div className="landing-back-link-wrapper" style={{ maxWidth: '800px', margin: '0 auto', marginBottom: '2rem' }}>
+                    <Link to={`/conferencia/${id}`} className="detalle-back-link" style={{ color: '#1a73e8', textDecoration: 'none', fontWeight: '500' }}>
+                        ← Volver a la conferencia
+                    </Link>
+                </div>
+                <div style={{ maxWidth: '600px', margin: '0 auto', backgroundColor: '#fff', padding: '2.5rem', borderRadius: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', textAlign: 'center' }}>
+                    <h1 style={{ fontSize: '1.75rem', color: '#202124', marginBottom: '1rem' }}>Pago en revisión</h1>
+                    <p style={{ color: '#5f6368', lineHeight: 1.6 }}>
+                        Recibimos tu comprobante y está pendiente de aprobación. Cuando el pago quede aprobado, podrás verlo reflejado aquí y en la página de la conferencia.
+                    </p>
+                    <Link to={`/conferencia/${id}`} className="landing-btn-primary" style={{ display: 'inline-block', marginTop: '1.5rem' }}>
+                        Volver a la Conferencia
+                    </Link>
+                </div>
+            </div>
+        );
+    }
 
     if (exito) {
         return (
@@ -41,10 +133,9 @@ const InscripcionAsistente = () => {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                         </svg>
                     </div>
-                    <h2 style={{ fontSize: '1.75rem', color: '#202124', marginBottom: '1rem' }}>¡Inscripción Aprobada!</h2>
+                    <h2 style={{ fontSize: '1.75rem', color: '#202124', marginBottom: '1rem' }}>¡Comprobante enviado!</h2>
                     <p style={{ color: '#5f6368', fontSize: '1.1rem', marginBottom: '2rem', lineHeight: '1.6' }}>
-                        Hemos recibido y validado tu comprobante de pago de manera exitosa. 
-                        Tu cupo para la conferencia está asegurado. ¡Te esperamos en el evento!
+                        Hemos recibido tu comprobante de pago. Queda en revisión; cuando sea aprobado verás tu inscripción como activa en la conferencia.
                     </p>
                     <Link to={`/conferencia/${id}`} className="landing-btn-primary" style={{ display: 'inline-block' }}>
                         Volver a la Conferencia
