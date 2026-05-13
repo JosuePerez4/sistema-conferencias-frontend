@@ -206,7 +206,7 @@ const Conferencias = () => {
                                         )}
                                     </div>
 
-                                    {estaLogueado && evento.id && (userRole === 'ADMIN' || userRole === 'CHAIR') && (
+                                    {estaLogueado && evento.id && (userRole === 'ADMIN' || userRole === 'CHAIR' || userRole === 'ASISTANT') && (
                                         <div className="conferencias-card-acciones">
                                             <button
                                                 type="button"
