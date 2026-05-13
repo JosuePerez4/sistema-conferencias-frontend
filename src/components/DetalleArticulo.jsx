@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { apiService } from '../services/api';
 import '../styles/components/detalle-articulo.css';
 
@@ -36,11 +36,13 @@ function esPdfBlob(blob, nombre) {
 
 const DetalleArticulo = () => {
   const { conferenciaId, paperId } = useParams();
+  const navigate = useNavigate();
   const [articulo, setArticulo] = useState(null);
   const [cargando, setCargando] = useState(true);
   const [cargandoArchivo, setCargandoArchivo] = useState(false);
   const [subiendoAdjuntos, setSubiendoAdjuntos] = useState(false);
   const [error, setError] = useState('');
+  const [userRole] = useState(() => localStorage.getItem('userRole') || '');
   const [preview, setPreview] = useState(null);
   const [archivosSubir, setArchivosSubir] = useState([]);
   const [evaluacion, setEvaluacion] = useState({
@@ -204,7 +206,7 @@ const DetalleArticulo = () => {
         observations: evaluacion.observations.trim() === '' ? null : evaluacion.observations.trim()
       };
       await apiService.evaluarPaper(conferenciaId, paperId, body);
-      await cargarArticulo();
+      navigate(`/conferencia/${conferenciaId}/evaluaciones`);
     } catch (err) {
       setError(err.message || 'No fue posible evaluar el artículo.');
     }
@@ -244,9 +246,6 @@ const DetalleArticulo = () => {
       <div className="detalle-back">
         <Link to={`/conferencia/${conferenciaId}`} className="detalle-back-link">
           ← Volver a la conferencia
-        </Link>
-        <Link to="/conferencias" className="detalle-back-link detalle-back-link--muted">
-          Catálogo de conferencias
         </Link>
       </div>
 
@@ -349,88 +348,109 @@ const DetalleArticulo = () => {
               </p>
             )}
 
-            <form onSubmit={handleSubirMasAdjuntos} className="detalle-adjuntos-upload">
-              <p className="sf-label detalle-adjuntos-section-title">Añadir adjuntos</p>
-              <div className="detalle-adjuntos-upload-inner">
-                <label className="detalle-adjuntos-dropzone" htmlFor="detalle-adjuntos-extra">
-                  <input
-                    id="detalle-adjuntos-extra"
-                    type="file"
-                    multiple
-                    accept=".pdf,.doc,.docx"
-                    onChange={handleArchivosSubirChange}
-                    className="detalle-adjuntos-file-input"
-                  />
-                  <div className="detalle-adjuntos-dropzone-inner">
-                    <svg className="detalle-adjuntos-upload-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                    </svg>
-                    <p className="detalle-adjuntos-dropzone-hint">
-                      <strong>Haz clic para elegir</strong> uno o varios archivos
-                    </p>
-                    <p className="detalle-adjuntos-dropzone-note">PDF, Word</p>
+            {userRole === 'AUTHOR' && (
+              <form onSubmit={handleSubirMasAdjuntos} className="detalle-adjuntos-upload">
+                <p className="sf-label detalle-adjuntos-section-title">
+                  {estadoActual === 'REJECTED' 
+                    ? 'Artículo rechazado' 
+                    : (estadoActual === 'ACCEPTED' ? 'Artículo aceptado' : 'Añadir adjuntos o correcciones')}
+                </p>
+                
+                {estadoActual === 'REJECTED' ? (
+                  <div className="sf-alert-error" style={{ marginBottom: '1rem' }}>
+                    Este artículo ha sido rechazado y no permite más correcciones o adjuntos.
                   </div>
-                </label>
-                <div className="detalle-adjuntos-actions">
-                  {archivosSubir.length > 0 ? (
-                    <ul className="detalle-adjuntos-file-list">
-                      {archivosSubir.map((f) => (
-                        <li key={`${f.name}-${f.size}`}>{f.name}</li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="detalle-adjuntos-empty-hint">Aún no has seleccionado archivos.</p>
-                  )}
-                  <button
-                    type="submit"
-                    disabled={subiendoAdjuntos || !archivosSubir.length}
-                    className="detalle-adjuntos-submit"
-                  >
-                    {subiendoAdjuntos ? 'Subiendo…' : 'Subir archivos'}
-                  </button>
-                </div>
-              </div>
-              <p className="detalle-section-hint detalle-section-hint--tight">
-                Puedes añadir más archivos en cualquier momento.
-              </p>
-            </form>
+                ) : estadoActual === 'ACCEPTED' ? (
+                  <div className="sf-alert-success" style={{ marginBottom: '1rem' }}>
+                    ¡Felicidades! Tu artículo ha sido aceptado. No es necesario subir más archivos.
+                  </div>
+                ) : (
+                  <>
+                    <div className="detalle-adjuntos-upload-inner">
+                      <label className="detalle-adjuntos-dropzone" htmlFor="detalle-adjuntos-extra">
+                        <input
+                          id="detalle-adjuntos-extra"
+                          type="file"
+                          multiple
+                          accept=".pdf,.doc,.docx"
+                          onChange={handleArchivosSubirChange}
+                          className="detalle-adjuntos-file-input"
+                        />
+                        <div className="detalle-adjuntos-dropzone-inner">
+                          <svg className="detalle-adjuntos-upload-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                          </svg>
+                          <p className="detalle-adjuntos-dropzone-hint">
+                            <strong>Haz clic para elegir</strong> archivos de corrección
+                          </p>
+                          <p className="detalle-adjuntos-dropzone-note">PDF, Word</p>
+                        </div>
+                      </label>
+                      <div className="detalle-adjuntos-actions">
+                        {archivosSubir.length > 0 ? (
+                          <ul className="detalle-adjuntos-file-list">
+                            {archivosSubir.map((f) => (
+                              <li key={`${f.name}-${f.size}`}>{f.name}</li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p className="detalle-adjuntos-empty-hint">Sube tus correcciones aquí si el Chair lo solicitó.</p>
+                        )}
+                        <button
+                          type="submit"
+                          disabled={subiendoAdjuntos || !archivosSubir.length}
+                          className="detalle-adjuntos-submit"
+                        >
+                          {subiendoAdjuntos ? 'Subiendo…' : 'Subir correcciones'}
+                        </button>
+                      </div>
+                    </div>
+                    <p className="detalle-section-hint detalle-section-hint--tight">
+                      Si el evaluador solicitó cambios, sube la nueva versión aquí.
+                    </p>
+                  </>
+                )}
+              </form>
+            )}
           </section>
 
-          <section id="evaluar-articulo">
-            <h3 className="detalle-section-title">Evaluar artículo</h3>
-            <p className="detalle-section-hint">
-              Elige el nuevo estado del artículo y, si quieres, deja observaciones para el autor.
-            </p>
-            <form onSubmit={handleEvaluar} className="detalle-eval-form">
-              <div>
-                <label className="sf-label" htmlFor="eval-status">Estado (PaperStatus)</label>
-                <select
-                  id="eval-status"
-                  value={evaluacion.status}
-                  onChange={(e) => setEvaluacion((prev) => ({ ...prev, status: e.target.value }))}
-                  className="sf-select"
-                >
-                  {Object.entries(STATUS_LABELS).map(([value, label]) => (
-                    <option key={value} value={value}>{label} ({value})</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="sf-label" htmlFor="eval-observations">Observaciones</label>
-                <textarea
-                  id="eval-observations"
-                  value={evaluacion.observations}
-                  onChange={(e) => setEvaluacion((prev) => ({ ...prev, observations: e.target.value }))}
-                  rows="3"
-                  className="sf-textarea"
-                  placeholder="Observaciones de la evaluación (opcional)"
-                />
-              </div>
-              <button type="submit" className="detalle-eval-submit">
-                Guardar evaluación
-              </button>
-            </form>
-          </section>
+          {(userRole === 'ADMIN' || userRole === 'CHAIR') && (
+            <section id="evaluar-articulo">
+              <h3 className="detalle-section-title">Evaluar artículo</h3>
+              <p className="detalle-section-hint">
+                Elige el nuevo estado del artículo y, si quieres, deja observaciones para el autor.
+              </p>
+              <form onSubmit={handleEvaluar} className="detalle-eval-form">
+                <div>
+                  <label className="sf-label" htmlFor="eval-status">Estado (PaperStatus)</label>
+                  <select
+                    id="eval-status"
+                    value={evaluacion.status}
+                    onChange={(e) => setEvaluacion((prev) => ({ ...prev, status: e.target.value }))}
+                    className="sf-select"
+                  >
+                    {Object.entries(STATUS_LABELS).map(([value, label]) => (
+                      <option key={value} value={value}>{label} ({value})</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="sf-label" htmlFor="eval-observations">Observaciones</label>
+                  <textarea
+                    id="eval-observations"
+                    value={evaluacion.observations}
+                    onChange={(e) => setEvaluacion((prev) => ({ ...prev, observations: e.target.value }))}
+                    rows="3"
+                    className="sf-textarea"
+                    placeholder="Observaciones de la evaluación (opcional)"
+                  />
+                </div>
+                <button type="submit" className="detalle-eval-submit">
+                  Guardar evaluación
+                </button>
+              </form>
+            </section>
+          )}
         </div>
       </div>
 

@@ -7,18 +7,22 @@ const Navbar = () => {
   const location = useLocation();
   const [estaLogueado, setEstaLogueado] = useState(Boolean(localStorage.getItem('accessToken')));
   const [nombreUsuario, setNombreUsuario] = useState(localStorage.getItem('userName') || '');
+  const [userRole, setUserRole] = useState(localStorage.getItem('userRole') || '');
 
   // Se re-evalúa cada vez que cambia la ruta (ej: después del login)
   useEffect(() => {
     setEstaLogueado(Boolean(localStorage.getItem('accessToken')));
     setNombreUsuario(localStorage.getItem('userName') || '');
+    setUserRole(localStorage.getItem('userRole') || '');
   }, [location]);
 
   const handleCerrarSesion = () => {
     localStorage.removeItem('accessToken');
     localStorage.removeItem('userName');
+    localStorage.removeItem('userRole');
     setEstaLogueado(false);
     setNombreUsuario('');
+    setUserRole('');
     navigate('/iniciar-sesion');
   };
 
@@ -34,10 +38,14 @@ const Navbar = () => {
         <div className="navbar-links">
           <Link to="/" className="navbar-link">Inicio</Link>
           <Link to="/conferencias" className="navbar-link">Conferencias</Link>
-          <Link to="/salas" className="navbar-link">Salas</Link>
-          <Link to="/crear-conferencia" className="navbar-link-create">
-            <span className="navbar-link-create-icon">+</span> Crear Evento
-          </Link>
+          {userRole === 'ADMIN' && (
+            <Link to="/salas" className="navbar-link">Salas</Link>
+          )}
+          {userRole === 'ADMIN' && (
+            <Link to="/crear-conferencia" className="navbar-link-create">
+              <span className="navbar-link-create-icon">+</span> Crear Evento
+            </Link>
+          )}
           <div className="navbar-divider" aria-hidden="true" />
 
           {estaLogueado ? (

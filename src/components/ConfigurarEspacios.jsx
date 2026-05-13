@@ -8,11 +8,12 @@ const ConfigurarEspacios = () => {
 
     const [conferencia, setConferencia] = useState(null);
     const [espacios, setEspacios] = useState([]);
+    const [agenda, setAgenda] = useState([]);
     const [cargandoEspacios, setCargandoEspacios] = useState(true);
 
     const [formData, setFormData] = useState({
         day: '',
-        room: '',
+        roomId: '',
         topic: '',
         startTime: '',
         endTime: '',
@@ -27,15 +28,39 @@ const ConfigurarEspacios = () => {
     const cargarDatos = async () => {
         setCargandoEspacios(true);
         try {
-            const [conf, lista] = await Promise.allSettled([
+            const [confRes, salasRes] = await Promise.allSettled([
                 apiService.obtenerConferencia(conferenceId),
                 apiService.obtenerSalas(conferenceId),
             ]);
-            if (conf.status === 'fulfilled') setConferencia(conf.value);
-            if (lista.status === 'fulfilled') {
-                setEspacios(Array.isArray(lista.value) ? lista.value : []);
+            
+            let confActual = null;
+            if (confRes.status === 'fulfilled') {
+                confActual = confRes.value;
+                setConferencia(confActual);
             }
-        } catch {
+            let listaSalas = [];
+            if (salasRes.status === 'fulfilled') {
+                listaSalas = Array.isArray(salasRes.value) ? salasRes.value : [];
+                setEspacios(listaSalas);
+            }
+
+            // Obtener agenda usando las salas de la conferencia para mayor fiabilidad
+            if (listaSalas.length > 0) {
+                const response = await apiService.obtenerSlots(conferenceId).catch(() => []);
+                const todosLosSlots = Array.isArray(response) ? response : (response?.data || response?.content || []);
+                
+                // Ordenar por día y luego por hora de inicio
+                todosLosSlots.sort((a, b) => {
+                    if (a.day !== b.day) return a.day.localeCompare(b.day);
+                    return a.startTime.localeCompare(b.startTime);
+                });
+                
+                setAgenda(todosLosSlots);
+            } else {
+                setAgenda([]);
+            }
+        } catch (err) {
+            console.error('Error al cargar datos:', err);
         } finally {
             setCargandoEspacios(false);
         }
@@ -69,7 +94,7 @@ const ConfigurarEspacios = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!formData.day)          { setError('Selecciona un día.');              return; }
-        if (!formData.room.trim())  { setError('Escribe el nombre de la sala.');   return; }
+        if (!formData.roomId)       { setError('Selecciona una sala.');            return; }
         if (!formData.topic.trim()) { setError('Selecciona o escribe un tópico.'); return; }
         if (!formData.startTime)    { setError('Indica la hora de inicio.');       return; }
         if (!formData.endTime)      { setError('Indica la hora de fin.');          return; }
@@ -83,25 +108,36 @@ const ConfigurarEspacios = () => {
         setExito('');
 
         try {
-            const salaCreada = await apiService.crearSala(conferenceId, {
-                name: formData.room,
-                capacity: Number(formData.capacity),
-                type: 'PRESENCIAL',
-                locationOrLink: 'Por definir',
-                topicHints: formData.topic,
+            const inicioNuevo = a24h(formData.startTime);
+            const finNuevo = a24h(formData.endTime);
+
+            // Validar cruces en la sala y día seleccionados usando los slots configurados
+            const response = await apiService.obtenerSlots(conferenceId).catch(() => []);
+            const todosLosSlots = Array.isArray(response) ? response : (response?.data || response?.content || []);
+            const slotsSala = todosLosSlots.filter(s => String(s.roomId) === String(formData.roomId));
+            
+            const cruce = slotsSala.some(slot => {
+                if (slot.day !== formData.day) return false;
+                return inicioNuevo < slot.endTime && finNuevo > slot.startTime;
             });
+
+            if (cruce) {
+                setError('Esa hora ya está ocupada en esta sala. Elige otro horario para no cruzar los espacios.');
+                setGuardando(false);
+                return;
+            }
 
             await apiService.crearSlotAgenda(conferenceId, {
                 day: formData.day,
-                roomId: salaCreada.id,
+                roomId: formData.roomId,
                 topic: formData.topic,
-                startTime: a24h(formData.startTime),
-                endTime: a24h(formData.endTime),
+                startTime: inicioNuevo,
+                endTime: finNuevo,
                 maxPapers: Number(formData.capacity),
             });
 
             setExito('¡Espacio y franja horaria creados con éxito!');
-            setFormData({ day: formData.day, room: '', topic: formData.topic, startTime: '', endTime: '', capacity: '10' });
+            setFormData({ day: formData.day, roomId: '', topic: formData.topic, startTime: '', endTime: '', capacity: '10' });
             setTimeout(() => setExito(''), 3000);
             await cargarDatos();
         } catch (err) {
@@ -137,14 +173,23 @@ const ConfigurarEspacios = () => {
     return (
         <div className="ce-container">
             <div className="ce-header">
-                <Link to="/conferencias" className="ce-back-link">← Volver a conferencias</Link>
-                <h1 className="ce-title">Configurar Espacios de Presentación</h1>
-                {conferencia && (
-                    <p className="ce-subtitle">
-                        {conferencia.name} &nbsp;·&nbsp;
-                        {formatearFecha(conferencia.startDate)} – {formatearFecha(conferencia.endDate)}
-                    </p>
-                )}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
+                    <div>
+                        <Link to="/conferencias" className="ce-back-link">← Volver a conferencias</Link>
+                        <h1 className="ce-title" style={{ marginTop: '0.5rem' }}>Configurar Espacios de Presentación</h1>
+                        {conferencia && (
+                            <p className="ce-subtitle">
+                                {conferencia.name} &nbsp;·&nbsp;
+                                {formatearFecha(conferencia.startDate)} – {formatearFecha(conferencia.endDate)}
+                            </p>
+                        )}
+                    </div>
+                    <div style={{ paddingTop: '1.5rem' }}>
+                        <Link to={`/conferencia/${conferenceId}/salas`} className="ce-btn ce-btn-secondary" style={{ whiteSpace: 'nowrap' }}>
+                            🏢 Gestionar Salas
+                        </Link>
+                    </div>
+                </div>
             </div>
 
             {exito && (
@@ -184,8 +229,16 @@ const ConfigurarEspacios = () => {
                         </div>
 
                         <div className="ce-field">
-                            <label htmlFor="ce-room">Nombre de la sala *</label>
-                            <input id="ce-room" type="text" name="room" value={formData.room} onChange={handleChange} placeholder="Ej. Sala A – Auditorio Principal" className="ce-input" required />
+                            <label htmlFor="ce-room">Sala *</label>
+                            <select id="ce-room" name="roomId" value={formData.roomId} onChange={handleChange} className="ce-select" required>
+                                <option value="">Selecciona una sala</option>
+                                {espacios.map((sala) => (
+                                    <option key={sala.id} value={sala.id}>{sala.name}</option>
+                                ))}
+                            </select>
+                            {espacios.length === 0 && (
+                                <p className="ce-field-help" style={{ color: '#c5221f' }}>No hay salas creadas. Por favor, crea una sala primero.</p>
+                            )}
                         </div>
 
                         <div className="ce-field">
@@ -229,10 +282,9 @@ const ConfigurarEspacios = () => {
 
                 <section className="ce-card ce-list-section">
                     <h2 className="ce-section-title">
-                        Espacios configurados
-                        <span className="ce-badge">{espacios.length}</span>
+                        Franjas horarias configuradas
+                        <span className="ce-badge">{agenda.length}</span>
                     </h2>
-
                     {cargandoEspacios ? (
                         <div className="ce-skeleton-list">
                             {[1, 2, 3].map((i) => (
@@ -243,45 +295,53 @@ const ConfigurarEspacios = () => {
                                 </div>
                             ))}
                         </div>
-                    ) : espacios.length === 0 ? (
+                    ) : agenda.length === 0 ? (
                         <div className="ce-empty">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
                                 <rect x="3" y="4" width="18" height="18" rx="2" />
                                 <path d="M16 2v4M8 2v4M3 10h18" />
                             </svg>
-                            <p>Aún no hay espacios configurados.</p>
-                            <span>Crea el primero usando el formulario.</span>
+                            <p>No hay franjas horarias creadas.</p>
+                            <span>Configura un horario usando el formulario.</span>
                         </div>
                     ) : (
                         <div className="ce-table-wrapper">
                             <table className="ce-table">
                                 <thead>
                                     <tr>
+                                        <th>Día</th>
                                         <th>Sala</th>
-                                        <th>Tópicos</th>
+                                        <th>Horario</th>
+                                        <th>Tópico</th>
+                                        <th>Ubicación</th>
                                         <th>Tipo</th>
                                         <th>Cap.</th>
-                                        <th>Ubicación</th>
                                         <th aria-label="Acciones"></th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {espacios.map((esp) => (
-                                        <tr key={esp.id}>
-                                            <td>{esp.name}</td>
-                                            <td><span className="ce-chip">{esp.topicHints || '—'}</span></td>
-                                            <td>{esp.type}</td>
-                                            <td className="ce-center">{esp.capacity}</td>
-                                            <td>{esp.locationOrLink || '—'}</td>
+                                    {agenda.map((slot) => {
+                                        const sala = espacios.find(s => String(s.id) === String(slot.roomId));
+                                        return (
+                                            <tr key={slot.id}>
+                                                <td>{formatearFecha(slot.day)}</td>
+                                                <td>{sala?.name || `Sala ${slot.roomId}`}</td>
+                                                <td className="ce-nowrap">
+                                                    <strong>{slot.startTime.slice(0, 5)}</strong> - {slot.endTime.slice(0, 5)}
+                                                </td>
+                                                <td><span className="ce-chip">{slot.topic}</span></td>
+                                                <td>{sala?.locationOrLink || '—'}</td>
+                                                <td><span style={{ fontSize: '0.8rem', opacity: 0.8 }}>{sala?.type || '—'}</span></td>
+                                                <td className="ce-center">{slot.maxPapers}</td>
                                             <td className="ce-center">
                                                 <button
-                                                    onClick={() => handleEliminar(esp.id)}
-                                                    disabled={eliminandoId === esp.id}
+                                                    onClick={() => handleEliminar(slot.id)}
+                                                    disabled={eliminandoId === slot.id}
                                                     className="ce-btn-icon ce-btn-danger"
                                                     aria-label="Eliminar espacio"
                                                     title="Eliminar"
                                                 >
-                                                    {eliminandoId === esp.id ? '…' : (
+                                                    {eliminandoId === slot.id ? '…' : (
                                                         <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                                                             <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
                                                         </svg>
@@ -289,8 +349,9 @@ const ConfigurarEspacios = () => {
                                                 </button>
                                             </td>
                                         </tr>
-                                    ))}
-                                </tbody>
+                                    );
+                                })}
+                            </tbody>
                             </table>
                         </div>
                     )}

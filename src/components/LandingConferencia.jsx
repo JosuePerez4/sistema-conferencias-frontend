@@ -9,6 +9,10 @@ const LandingConferencia = () => {
     const [conferencia, setConferencia] = useState(null);
     const [cargando, setCargando] = useState(true);
     const [error, setError] = useState('');
+    const [userRole] = useState(() => localStorage.getItem('userRole') || '');
+    const [userName] = useState(() => localStorage.getItem('userName') || '');
+    const [estaLogueado] = useState(() => Boolean(localStorage.getItem('accessToken')));
+    const [misArticulos, setMisArticulos] = useState([]);
 
     const formatearFecha = (fecha) => {
         if (!fecha) return 'Fecha por confirmar';
@@ -39,8 +43,25 @@ const LandingConferencia = () => {
             }
         };
 
+        const cargarArticulosAutor = async () => {
+            if (userRole !== 'AUTHOR' || !estaLogueado) return;
+            try {
+                const res = await apiService.obtenerPapers(id);
+                const lista = Array.isArray(res) ? res : (res?.data || res?.content || []);
+                // Filtrar por nombre de usuario en la lista de autores
+                const filtrados = lista.filter(p => {
+                    const autoresStr = Array.isArray(p.authors) ? p.authors.join(' ') : String(p.authors || '');
+                    return autoresStr.toLowerCase().includes(userName.toLowerCase());
+                });
+                setMisArticulos(filtrados);
+            } catch (e) {
+                console.error('Error cargando artículos del autor:', e);
+            }
+        };
+
         cargarDetalle();
-    }, [id]);
+        cargarArticulosAutor();
+    }, [id, userRole, estaLogueado, userName]);
 
     const detalle = useMemo(() => {
         if (!conferencia) return null;
@@ -132,6 +153,34 @@ const LandingConferencia = () => {
                             </p>
                         </section>
 
+                        {userRole === 'AUTHOR' && misArticulos.length > 0 && (
+                            <section className="landing-section-spaced" style={{ backgroundColor: '#f8f9fa', padding: '1.5rem', borderRadius: '12px', border: '1px solid #e9ecef' }}>
+                                <h2 className="landing-section-title" style={{ color: '#1a73e8' }}>Mis Artículos</h2>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                    {misArticulos.map(art => (
+                                        <div key={art.id} style={{ backgroundColor: '#fff', padding: '1rem', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <div>
+                                                <h4 style={{ margin: 0, color: '#202124' }}>{art.title}</h4>
+                                                <span style={{ 
+                                                    fontSize: '0.8rem', 
+                                                    padding: '2px 8px', 
+                                                    borderRadius: '12px', 
+                                                    backgroundColor: art.status === 'REJECTED' ? '#fce8e6' : (art.status === 'ACCEPTED' ? '#e6f4ea' : '#fef7e0'),
+                                                    color: art.status === 'REJECTED' ? '#c5221f' : (art.status === 'ACCEPTED' ? '#137333' : '#b06000'),
+                                                    fontWeight: '600'
+                                                }}>
+                                                    {art.status}
+                                                </span>
+                                            </div>
+                                            <Link to={`/conferencia/${id}/articulo/${art.id}`} style={{ color: '#1a73e8', textDecoration: 'none', fontWeight: '500', fontSize: '0.9rem' }}>
+                                                Ver Detalles →
+                                            </Link>
+                                        </div>
+                                    ))}
+                                </div>
+                            </section>
+                        )}
+
                         <section className="landing-agenda">
                             <h2 className="landing-section-title">Fechas del evento</h2>
                             <div>
@@ -175,24 +224,36 @@ const LandingConferencia = () => {
                                 <li>✓ Certificado de asistencia digital</li>
                                 <li>✓ Fiesta de Networking</li>
                             </ul>
-                            <button type="button" className="landing-btn-primary">
-                                Comprar Entrada
-                            </button>
-                            <Link to={`/editar-conferencia/${id}`} className="landing-btn-secondary">
-                                Editar Conferencia
-                            </Link>
-                            <Link to={`/conferencia/${id}/configurar-espacios`} className="landing-btn-secondary">
-                                Configurar Espacios
-                            </Link>
-                            <Link to={`/conferencia/${id}/salas`} className="landing-btn-secondary">
-                                Ver Salas
-                            </Link>
-                            <Link to={`/enviar-articulo/${id}`} className="landing-btn-secondary">
-                                Enviar Artículo
-                            </Link>
-                            <p className="landing-stripe-note">
-                                Ventas seguras procesadas a través de Stripe.
-                            </p>
+                            {userRole === 'ASISTANT' && (
+                                <Link to={`/conferencia/${id}/inscripcion`} className="landing-btn-primary">
+                                    Comprar Entrada
+                                </Link>
+                            )}
+                            {userRole === 'ADMIN' && (
+                                <Link to={`/editar-conferencia/${id}`} className="landing-btn-secondary">
+                                    Editar Conferencia
+                                </Link>
+                            )}
+                            {userRole === 'ADMIN' && (
+                                <Link to={`/conferencia/${id}/espacios`} className="landing-btn-secondary">
+                                    Configurar Espacios
+                                </Link>
+                            )}
+                            {userRole === 'ADMIN' && (
+                                <Link to={`/conferencia/${id}/salas`} className="landing-btn-secondary">
+                                    Ver Salas
+                                </Link>
+                            )}
+                            {userRole === 'CHAIR' && (
+                                <Link to={`/conferencia/${id}/evaluaciones`} className="landing-btn-secondary">
+                                    Evaluar Artículos
+                                </Link>
+                            )}
+                            {userRole === 'AUTHOR' && (
+                                <Link to={`/enviar-articulo/${id}`} className="landing-btn-secondary">
+                                    Enviar Artículo
+                                </Link>
+                            )}
                         </div>
                     </div>
                 </div>
