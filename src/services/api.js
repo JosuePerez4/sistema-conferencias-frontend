@@ -439,6 +439,15 @@ export const apiService = {
     }
   },
 
+  obtenerRegistrosConferencia: async (conferenceId) => {
+    const response = await fetch(`${REG_URL}/register-list?conferenceId=${encodeURIComponent(conferenceId)}`, {
+      method: 'GET',
+      headers: getAuthHeaders()
+    });
+    if (!response.ok) throw new Error(await parseError(response, 'Error al obtener inscripciones'));
+    return response.json();
+  },
+
   // ─── Notification Service ────────────────────────────────────────────────
   obtenerNotificacionesPaper: async (paperId) => {
     const response = await fetch(`${NOTIF_URL}/paper/${encodeURIComponent(paperId)}`, {

@@ -88,7 +88,7 @@ const EnviarArticulo = () => {
       setExito(true);
       setTimeout(() => {
         navigate(
-          `/conferencia/${encodeURIComponent(conferenceIdResolved)}/articulo/${encodeURIComponent(paperId)}`
+          `/conferencia/${encodeURIComponent(conferenceIdResolved)}/articulo-enviado/${encodeURIComponent(paperId)}`
         );
       }, 2000);
     } catch (err) {

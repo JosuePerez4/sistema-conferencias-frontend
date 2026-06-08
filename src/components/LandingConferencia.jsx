@@ -288,7 +288,7 @@ const LandingConferencia = () => {
                                     Editar Conferencia
                                 </Link>
                             )}
-                            {userRole === 'ADMIN' && (
+                            {(userRole === 'ADMIN' || userRole === 'CHAIR') && (
                                 <Link to={`/conferencia/${id}/espacios`} className="landing-btn-secondary">
                                     Configurar Espacios
                                 </Link>

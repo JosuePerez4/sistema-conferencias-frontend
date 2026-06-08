@@ -27,6 +27,10 @@ import ConfigurarEspacios from './components/ConfigurarEspacios';
 import SalasConferencia from './components/SalasConferencia';
 import Salas from './components/Salas';
 import InscripcionAsistente from './components/InscripcionAsistente';
+import AdminPagos from './components/AdminPagos';
+import ArticuloEnviadoExito from './components/ArticuloEnviadoExito';
+import MisArticulos from './components/MisArticulos';
+import AdminChairs from './components/AdminChairs';
 
 function App() {
     return (
@@ -43,12 +47,16 @@ function App() {
                     <Route path="/crear-conferencia" element={<CrearConferencia />} />
                     <Route path="/editar-conferencia/:id" element={<EditarConferencia />} />
                     <Route path="/enviar-articulo/:conferenciaId" element={<EnviarArticulo />} />
+                    <Route path="/conferencia/:conferenciaId/articulo-enviado/:paperId" element={<ArticuloEnviadoExito />} />
                     <Route path="/conferencia/:conferenciaId/articulo/:paperId" element={<DetalleArticulo />} />
                     <Route path="/conferencia/:conferenciaId/evaluaciones" element={<BandejaEvaluacion />} />
                     <Route path="/conferencia/:conferenciaId/papers/:paperId/evaluar" element={<EvaluarArticuloRedirect />} />
                     <Route path="/conferencia/:conferenciaId/programacion" element={<ProgramacionSalas />} />
                     <Route path="/conferencia/:conferenceId/espacios" element={<ConfigurarEspacios />} />
                     <Route path="/conferencia/:conferenciaId/salas" element={<SalasConferencia />} />
+                    <Route path="/admin/pagos" element={<AdminPagos />} />
+                    <Route path="/admin/chairs" element={<AdminChairs />} />
+                    <Route path="/mis-articulos" element={<MisArticulos />} />
                 </Routes>
             </Layout>
         </BrowserRouter>

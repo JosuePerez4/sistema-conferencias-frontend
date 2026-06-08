@@ -42,6 +42,15 @@ const Navbar = () => {
             <Link to="/salas" className="navbar-link">Salas</Link>
           )}
           {userRole === 'ADMIN' && (
+            <Link to="/admin/pagos" className="navbar-link">Pagos Pendientes</Link>
+          )}
+          {userRole === 'ADMIN' && (
+            <Link to="/admin/chairs" className="navbar-link">Gestionar Chairs</Link>
+          )}
+          {userRole === 'AUTHOR' && (
+            <Link to="/mis-articulos" className="navbar-link">Mis Artículos</Link>
+          )}
+          {userRole === 'ADMIN' && (
             <Link to="/crear-conferencia" className="navbar-link-create">
               <span className="navbar-link-create-icon">+</span> Crear Evento
             </Link>
