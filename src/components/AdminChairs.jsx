@@ -62,6 +62,13 @@ const AdminChairs = () => {
             </div>
 
             <div className="admin-chairs-card">
+                {cargando ? (
+                    <div style={{ padding: '2rem', textAlign: 'center', color: '#666' }}>Cargando usuarios...</div>
+                ) : error ? (
+                    <div style={{ padding: '2rem', textAlign: 'center', color: '#c62828' }}>{error}</div>
+                ) : chairs.length === 0 ? (
+                    <div style={{ padding: '2rem', textAlign: 'center', color: '#666' }}>No hay usuarios registrados con el rol CHAIR en la base de datos.</div>
+                ) : (
                 <div className="table-responsive">
                     <table className="admin-chairs-table">
                         <thead>
@@ -104,9 +111,7 @@ const AdminChairs = () => {
                         </tbody>
                     </table>
                 </div>
-            </div>
-            <div className="admin-chairs-note">
-                <strong>Nota del desarrollador:</strong> Esta vista funciona mediante estado local simulado, ya que el backend actual no expone endpoints para listar o modificar usuarios.
+                )}
             </div>
         </div>
     );
