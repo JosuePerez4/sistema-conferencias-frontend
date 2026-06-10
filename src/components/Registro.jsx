@@ -163,6 +163,7 @@ const Registro = () => {
                 <option value="ASISTANT">Asistente (evaluación / apoyo)</option>
                 <option value="CHAIR">Chair (organizador de la conferencia)</option>
                 <option value="ADMIN">Administrador</option>
+                <option value="GUEST_SPOKER">Ponente Invitado</option>
               </select>
             </div>
 

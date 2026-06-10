@@ -17,9 +17,14 @@ const EditarConferencia = () => {
     endDate: '',
     submissionDeadline: '',
     topics: '',
-    speakers: '',
+    sponsors: '',
     state: 'DRAFT'
   });
+
+  const [speakerSearch, setSpeakerSearch] = useState('');
+  const [speakerResults, setSpeakerResults] = useState([]);
+  const [selectedSpeakers, setSelectedSpeakers] = useState([]);
+  const [buscandoPonentes, setBuscandoPonentes] = useState(false);
 
   const [cargando, setCargando] = useState(true);
   const [guardando, setGuardando] = useState(false);
@@ -44,9 +49,20 @@ const EditarConferencia = () => {
           endDate: (conf?.endDate || '').slice(0, 10),
           submissionDeadline: (conf?.submissionDeadline || '').slice(0, 10),
           topics: Array.isArray(conf?.topics) ? conf.topics.join(', ') : '',
-          speakers: Array.isArray(conf?.speakers) ? conf.speakers.join(', ') : '',
+          sponsors: Array.isArray(conf?.sponsors) ? conf.sponsors.join(', ') : '',
           state: conf?.state || 'DRAFT',
         });
+        
+        if (conf?.speakerIds && conf.speakerIds.length > 0) {
+          try {
+            const resp = await apiService.obtenerPonentesPorId(conf.speakerIds);
+            if (resp && resp.authors) {
+              setSelectedSpeakers(resp.authors);
+            }
+          } catch(e) {
+            console.error("No se pudieron cargar los detalles de los ponentes", e);
+          }
+        }
       } catch (err) {
         setError(err.message || 'No fue posible cargar la conferencia.');
       } finally {
@@ -64,10 +80,48 @@ const EditarConferencia = () => {
     });
   };
 
+  const handleSpeakerSearchChange = async (e) => {
+    const query = e.target.value;
+    setSpeakerSearch(query);
+    if (query.length >= 2) {
+      setBuscandoPonentes(true);
+      try {
+        const results = await apiService.buscarPonentes(query);
+        const filtered = results.filter(
+          (r) => !selectedSpeakers.some((s) => s.id === r.id)
+        );
+        setSpeakerResults(filtered);
+      } catch (err) {
+        console.error("Error buscando ponentes", err);
+        setSpeakerResults([]);
+      } finally {
+        setBuscandoPonentes(false);
+      }
+    } else {
+      setSpeakerResults([]);
+    }
+  };
+
+  const addSpeaker = (speaker) => {
+    setSelectedSpeakers([...selectedSpeakers, speaker]);
+    setSpeakerSearch('');
+    setSpeakerResults([]);
+  };
+
+  const removeSpeaker = (id) => {
+    setSelectedSpeakers(selectedSpeakers.filter((s) => s.id !== id));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (guardando || eliminando) return;
     setError('');
+    
+    if (selectedSpeakers.length === 0) {
+      setError('Debes seleccionar al menos un ponente.');
+      return;
+    }
+    
     setExito(false);
     setGuardando(true);
 
@@ -83,7 +137,8 @@ const EditarConferencia = () => {
         endDate: formData.endDate,
         submissionDeadline: formData.submissionDeadline,
         topics: formData.topics,
-        speakers: formData.speakers,
+        sponsors: formData.sponsors,
+        speakerIds: selectedSpeakers.map((s) => s.id),
         state: formData.state
       });
 
@@ -274,17 +329,52 @@ const EditarConferencia = () => {
               />
             </div>
             <div>
-              <label className="sf-label" htmlFor="edit-speakers">Ponente(s) *</label>
+              <label className="sf-label" htmlFor="edit-sponsors">Patrocinadores</label>
               <input
-                id="edit-speakers"
+                id="edit-sponsors"
                 type="text"
-                name="speakers"
-                value={formData.speakers}
+                name="sponsors"
+                value={formData.sponsors}
                 onChange={handleChange}
-                required
-                placeholder="Ej. Ana Perez, Luis Gomez"
+                placeholder="Ej. TechCorp, GlobalSoft"
                 className="sf-input"
               />
+            </div>
+            <div>
+              <label className="sf-label">Ponente(s) *</label>
+              <div style={{ position: 'relative' }}>
+                <input 
+                  type="text" 
+                  value={speakerSearch} 
+                  onChange={handleSpeakerSearchChange} 
+                  placeholder="Escribe para buscar ponentes..." 
+                  className="sf-input" 
+                />
+                {buscandoPonentes && <span style={{fontSize: '12px', color: '#666'}}>Buscando...</span>}
+                
+                {speakerResults.length > 0 && (
+                  <ul style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#fff', border: '1px solid #ddd', borderRadius: '4px', zIndex: 10, listStyle: 'none', padding: 0, margin: '4px 0', maxHeight: '150px', overflowY: 'auto' }}>
+                    {speakerResults.map((res) => (
+                      <li 
+                        key={res.id} 
+                        onClick={() => addSpeaker(res)}
+                        style={{ padding: '8px 12px', cursor: 'pointer', borderBottom: '1px solid #eee' }}
+                      >
+                        {res.displayName} <span style={{ color: '#888', fontSize: '12px' }}>({res.role})</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+              
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '8px' }}>
+                {selectedSpeakers.map((s) => (
+                  <span key={s.id} style={{ display: 'inline-flex', alignItems: 'center', background: '#e0e7ff', color: '#3730a3', padding: '4px 10px', borderRadius: '16px', fontSize: '14px' }}>
+                    {s.displayName}
+                    <button type="button" onClick={() => removeSpeaker(s.id)} style={{ background: 'none', border: 'none', marginLeft: '6px', color: '#4f46e5', cursor: 'pointer', fontWeight: 'bold' }}>×</button>
+                  </span>
+                ))}
+              </div>
             </div>
             <div>
               <label className="sf-label" htmlFor="edit-state">Estado *</label>
