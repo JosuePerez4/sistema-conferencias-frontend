@@ -34,8 +34,8 @@ const AdminPagos = () => {
                                 ...r,
                                 conferenceName: conf.name || conf.titulo || 'Conferencia',
                                 imageUrl: `${bucketBaseUrl}${r.proofObjectKey}`,
-                                // Simulación: Forzamos el estado a PENDING para mostrar el flujo en el frontend
-                                paymentStatus: 'PENDING'
+                                // Usar el estado real de la BD
+                                paymentStatus: r.status || r.paymentStatus || 'PENDING'
                             });
                         });
                     } catch (err) {
@@ -57,14 +57,20 @@ const AdminPagos = () => {
         cargarPagos();
     }, []);
 
-    const handleAprobar = (id) => {
-        setPagos(prev => prev.map(p => p.id === id ? { ...p, paymentStatus: 'APPROVED' } : p));
-        alert('Pago aprobado (Simulado en frontend)');
+    const handleAprobar = async (id) => {
+        try {
+            await apiService.aprobarPago(id);
+            setPagos(prev => prev.map(p => p.id === id ? { ...p, paymentStatus: 'APPROVED' } : p));
+            alert('Pago aprobado con éxito en el backend.');
+        } catch (err) {
+            alert('Error al aprobar el pago: ' + err.message);
+        }
     };
 
     const handleDenegar = (id) => {
+        // Mantenemos simulación para denegar ya que no hay endpoint
         setPagos(prev => prev.map(p => p.id === id ? { ...p, paymentStatus: 'REJECTED' } : p));
-        alert('Pago denegado (Simulado en frontend)');
+        alert('Pago denegado localmente (Falta endpoint en backend)');
     };
 
     if (cargando) return <div style={styles.loading}>Cargando pagos recibidos...</div>;

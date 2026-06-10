@@ -10,6 +10,7 @@ const ROOM_URL = `${API_GATEWAY_URL}/rooms`;
 const SCHEDULE_URL = `${API_GATEWAY_URL}/schedule`;
 const NOTIF_URL = `${API_GATEWAY_URL}/notifications`;
 const REG_URL = `${API_GATEWAY_URL}/registrations`;
+const USERS_URL = `${API_GATEWAY_URL}/api/v1/users`;
 
 const getToken = () => localStorage.getItem('accessToken');
 
@@ -446,6 +447,34 @@ export const apiService = {
     });
     if (!response.ok) throw new Error(await parseError(response, 'Error al obtener inscripciones'));
     return response.json();
+  },
+
+  aprobarPago: async (registrationId) => {
+    const response = await fetch(`${REG_URL}/approve-payment?registrationId=${encodeURIComponent(registrationId)}`, {
+      method: 'POST',
+      headers: getAuthHeaders()
+    });
+    if (!response.ok) throw new Error(await parseError(response, 'Error al aprobar pago'));
+    return response.json();
+  },
+
+  // ─── User Service ────────────────────────────────────────────────────────
+  obtenerChairs: async () => {
+    const response = await fetch(`${USERS_URL}/chairs`, {
+      method: 'GET',
+      headers: getAuthHeaders()
+    });
+    if (!response.ok) throw new Error(await parseError(response, 'Error al obtener lista de chairs'));
+    return response.json();
+  },
+
+  activarChair: async (id) => {
+    const response = await fetch(`${USERS_URL}/chairs/${encodeURIComponent(id)}/activate`, {
+      method: 'POST',
+      headers: getAuthHeaders()
+    });
+    if (!response.ok) throw new Error(await parseError(response, 'Error al activar chair'));
+    return;
   },
 
   // ─── Notification Service ────────────────────────────────────────────────
