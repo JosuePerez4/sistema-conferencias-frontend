@@ -190,12 +190,7 @@ const Conferencias = () => {
                                     </p>
 
                                     <div className="conferencias-card-footer">
-                                        <div>
-                                            <span className="conferencias-card-speaker-label">Ponentes:</span>
-                                            <span className="conferencias-card-speaker">
-                                                {evento.ponentes.length ? evento.ponentes.join(', ') : 'Por confirmar'}
-                                            </span>
-                                        </div>
+
 
                                         {evento.id ? (
                                             <Link to={`/conferencia/${evento.id}`} className="conferencias-card-link">

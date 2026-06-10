@@ -52,7 +52,9 @@ const MisArticulos = () => {
                 // 3. Filtro Local: Buscar donde el campo 'authors' incluya el userName
                 const misPapersFiltrados = todosLosPapers.filter(p => {
                     if (!p.authors) return false;
-                    const authorsLower = p.authors.toLowerCase();
+                    const authorsLower = typeof p.authors === 'string' 
+                      ? p.authors.toLowerCase() 
+                      : (Array.isArray(p.authors) ? p.authors.map(a => typeof a === 'object' ? (a.displayName || `${a.firstName || ''} ${a.lastName || ''}`.trim()) : String(a)).join(' ').toLowerCase() : '');
                     return authorsLower.includes(userName);
                 });
 
@@ -112,7 +114,7 @@ const MisArticulos = () => {
                                 <div style={styles.cardBody}>
                                     <h3 style={styles.paperTitle}>{paper.title}</h3>
                                     <p style={styles.paperTopic}><strong>Tema:</strong> {paper.topic}</p>
-                                    <p style={styles.paperAuthors}><strong>Autores:</strong> {paper.authors}</p>
+                                    <p style={styles.paperAuthors}><strong>Autores:</strong> {typeof paper.authors === 'string' ? paper.authors : (Array.isArray(paper.authors) ? paper.authors.map(a => typeof a === 'object' ? (a.displayName || `${a.firstName || ''} ${a.lastName || ''}`.trim()) : String(a)).join(', ') : 'Sin autores')}</p>
                                     
                                     {paper.evaluationObservations && (
                                         <div style={styles.observations}>

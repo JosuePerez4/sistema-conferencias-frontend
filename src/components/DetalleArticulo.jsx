@@ -236,7 +236,9 @@ const DetalleArticulo = () => {
   const estadoActual = articulo.status || 'SUBMITTED';
   const autoresTexto = typeof articulo.authors === 'string'
     ? articulo.authors
-    : (Array.isArray(articulo.authors) ? articulo.authors.join('; ') : 'Sin autores');
+    : (Array.isArray(articulo.authors) 
+        ? articulo.authors.map(a => typeof a === 'object' ? (a.displayName || `${a.firstName || ''} ${a.lastName || ''}`.trim() || 'Desconocido') : String(a)).join('; ') 
+        : 'Sin autores');
   const nombreConferencia =
     articulo.conferenceName ?? articulo.conference?.name ?? articulo.eventName ?? null;
   const abstractTexto = articulo.abstractText ?? articulo.abstract ?? '';

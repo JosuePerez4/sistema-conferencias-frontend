@@ -6,6 +6,7 @@ const AdminChairs = () => {
     const [chairs, setChairs] = useState([]);
     const [cargando, setCargando] = useState(true);
     const [error, setError] = useState(null);
+    const [exito, setExito] = useState(null);
 
     const cargarChairs = async () => {
         try {
@@ -32,26 +33,33 @@ const AdminChairs = () => {
         cargarChairs();
     }, []);
 
-    const handleActivar = async (id) => {
+    const handleActivar = async (id, nombre) => {
+        setError(null);
+        setExito(null);
         try {
             await apiService.activarChair(id);
-            alert('El usuario CHAIR ha sido activado correctamente en el backend.');
-            await cargarChairs(); // Refrescar lista desde la BD
+            // Actualizamos localmente el estado sin recargar de la BD de inmediato para más fluidez
+            setChairs(chairs.map(chair => chair.id === id ? { ...chair, estado: 'ACTIVO' } : chair));
+            setExito(`El usuario ${nombre} ha sido activado correctamente.`);
+            setTimeout(() => setExito(null), 4000); // Ocultar mensaje después de 4s
         } catch (err) {
-            alert('Error al activar el usuario: ' + err.message);
+            setError('Error al activar el usuario: ' + err.message);
+            setTimeout(() => setError(null), 4000);
         }
     };
 
-    const handleDesactivar = (id) => {
-        // Mantenemos la lógica local para desactivar hasta que el backend la implemente
-        const nuevosChairs = chairs.map(chair => {
-            if (chair.id === id) {
-                return { ...chair, estado: 'INACTIVO' };
-            }
-            return chair;
-        });
-        setChairs(nuevosChairs);
-        alert('Usuario desactivado localmente (Falta endpoint en backend)');
+    const handleDesactivar = async (id, nombre) => {
+        setError(null);
+        setExito(null);
+        try {
+            await apiService.desactivarChair(id);
+            setChairs(chairs.map(chair => chair.id === id ? { ...chair, estado: 'INACTIVO' } : chair));
+            setExito(`El usuario ${nombre} ha sido desactivado correctamente.`);
+            setTimeout(() => setExito(null), 4000);
+        } catch (err) {
+            setError('Error al desactivar el usuario: ' + err.message);
+            setTimeout(() => setError(null), 4000);
+        }
     };
 
     return (
@@ -60,6 +68,18 @@ const AdminChairs = () => {
                 <h1 className="admin-chairs-title">Activar Usuarios CHAIR</h1>
                 <p className="admin-chairs-subtitle">Gestiona la activación de los usuarios registrados como evaluadores (CHAIRS).</p>
             </div>
+
+            {exito && (
+                <div style={{ backgroundColor: '#e6f4ea', color: '#137333', padding: '1rem', borderRadius: '8px', marginBottom: '1rem', border: '1px solid #ceead6', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    ✅ {exito}
+                </div>
+            )}
+            
+            {error && (
+                <div style={{ backgroundColor: '#fce8e6', color: '#c5221f', padding: '1rem', borderRadius: '8px', marginBottom: '1rem', border: '1px solid #fad2cf', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    ❌ {error}
+                </div>
+            )}
 
             <div className="admin-chairs-card">
                 {cargando ? (
@@ -93,17 +113,32 @@ const AdminChairs = () => {
                                         {chair.estado === 'INACTIVO' ? (
                                             <button 
                                                 className="btn-activar"
-                                                onClick={() => handleActivar(chair.id)}
+                                                onClick={() => handleActivar(chair.id, chair.nombre)}
                                             >
                                                 Activar Usuario
                                             </button>
                                         ) : (
-                                            <button 
-                                                className="btn-desactivar"
-                                                onClick={() => handleDesactivar(chair.id)}
-                                            >
-                                                Desactivar
-                                            </button>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                <span style={{ color: '#137333', fontWeight: 'bold' }}>✅ Activado</span>
+                                                <button 
+                                                    onClick={() => handleDesactivar(chair.id, chair.nombre)}
+                                                    style={{ 
+                                                        backgroundColor: '#fce8e6', 
+                                                        color: '#c5221f', 
+                                                        border: '1px solid #fad2cf', 
+                                                        padding: '4px 10px', 
+                                                        borderRadius: '4px', 
+                                                        cursor: 'pointer',
+                                                        fontSize: '12px',
+                                                        fontWeight: 'bold',
+                                                        transition: 'background-color 0.2s'
+                                                    }}
+                                                    onMouseOver={(e) => e.target.style.backgroundColor = '#fad2cf'}
+                                                    onMouseOut={(e) => e.target.style.backgroundColor = '#fce8e6'}
+                                                >
+                                                    Desactivar
+                                                </button>
+                                            </div>
                                         )}
                                     </td>
                                 </tr>

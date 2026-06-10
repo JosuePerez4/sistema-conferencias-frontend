@@ -26,14 +26,95 @@ const EnviarArticulo = () => {
     abstractText: '',
     topic: '',
     institutionalAffiliation: '',
-    keywords: '',
-    authors: '',
+    keywords: ''
   });
 
   const [archivos, setArchivos] = useState([]);
   const [cargando, setCargando] = useState(false);
   const [exito, setExito] = useState(false);
   const [error, setError] = useState('');
+
+  // Estados para Autores
+  const [authorSearch, setAuthorSearch] = useState('');
+  const [authorResults, setAuthorResults] = useState([]);
+  const [selectedAuthors, setSelectedAuthors] = useState([]);
+  const [buscandoAutores, setBuscandoAutores] = useState(false);
+
+  // Estados para Ponente
+  const [presenterSearch, setPresenterSearch] = useState('');
+  const [presenterResults, setPresenterResults] = useState([]);
+  const [selectedPresenter, setSelectedPresenter] = useState(null);
+  const [buscandoPonente, setBuscandoPonente] = useState(false);
+
+  let searchTimeout = null;
+
+  const handleAuthorSearchChange = (e) => {
+    const val = e.target.value;
+    setAuthorSearch(val);
+    if (searchTimeout) clearTimeout(searchTimeout);
+    
+    if (val.trim().length < 2) {
+      setAuthorResults([]);
+      return;
+    }
+
+    setBuscandoAutores(true);
+    searchTimeout = setTimeout(async () => {
+      try {
+        const results = await apiService.buscarPonentes(val);
+        setAuthorResults(results);
+      } catch (err) {
+        console.error("Error buscando autores", err);
+      } finally {
+        setBuscandoAutores(false);
+      }
+    }, 500);
+  };
+
+  const handlePresenterSearchChange = (e) => {
+    const val = e.target.value;
+    setPresenterSearch(val);
+    if (searchTimeout) clearTimeout(searchTimeout);
+    
+    if (val.trim().length < 2) {
+      setPresenterResults([]);
+      return;
+    }
+
+    setBuscandoPonente(true);
+    searchTimeout = setTimeout(async () => {
+      try {
+        const results = await apiService.buscarPonentes(val);
+        setPresenterResults(results);
+      } catch (err) {
+        console.error("Error buscando ponente", err);
+      } finally {
+        setBuscandoPonente(false);
+      }
+    }, 500);
+  };
+
+  const addAuthor = (author) => {
+    if (!selectedAuthors.find(a => a.id === author.id)) {
+      setSelectedAuthors([...selectedAuthors, author]);
+    }
+    setAuthorSearch('');
+    setAuthorResults([]);
+  };
+
+  const removeAuthor = (id) => {
+    setSelectedAuthors(selectedAuthors.filter(a => a.id !== id));
+  };
+
+  const selectPresenter = (presenter) => {
+    setSelectedPresenter(presenter);
+    setPresenterSearch('');
+    setPresenterResults([]);
+  };
+
+  const clearPresenter = () => {
+    setSelectedPresenter(null);
+  };
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -53,10 +134,19 @@ const EnviarArticulo = () => {
     const topic = formData.topic.trim();
     const institutionalAffiliation = formData.institutionalAffiliation.trim();
     const keywords = formData.keywords.trim();
-    const authors = formData.authors.trim();
 
-    if (!title || !abstractText || !topic || !institutionalAffiliation || !keywords || !authors) {
+    if (!title || !abstractText || !topic || !institutionalAffiliation || !keywords) {
       setError('Todos los campos de texto son obligatorios y no pueden quedar en blanco.');
+      return;
+    }
+
+    if (selectedAuthors.length === 0) {
+      setError('Debes seleccionar al menos un autor para este artículo.');
+      return;
+    }
+
+    if (!selectedPresenter) {
+      setError('Debes especificar quién será el ponente de este artículo.');
       return;
     }
 
@@ -68,14 +158,15 @@ const EnviarArticulo = () => {
         throw new Error('La conferencia no es válida o no se pudo identificar.');
       }
 
-      /** PaperCreateDto — todos string, camelCase */
+      /** PaperCreateDto — todos string, camelCase, más UUIDs para authors y presenter */
       const payloadPaper = {
         title,
         abstractText,
         topic,
         institutionalAffiliation,
         keywords,
-        authors,
+        authorIds: selectedAuthors.map(a => a.id),
+        presenterId: selectedPresenter.id
       };
 
       /** Una sola petición: multipart paper (JSON) + files opcionales */
@@ -191,18 +282,88 @@ const EnviarArticulo = () => {
           </div>
 
           <div>
-            <label className="sf-label" htmlFor="enviar-authors">Autores *</label>
-            <input
-              id="enviar-authors"
-              type="text"
-              name="authors"
-              value={formData.authors}
-              onChange={handleChange}
-              required
-              placeholder="Ej. Ana López; Juan Pérez"
-              className="sf-input"
-            />
-            <p className="enviar-field-hint">Un solo texto (backend: string; puedes separar con punto y coma).</p>
+            <label className="sf-label">Autores registrados *</label>
+            <div style={{ position: 'relative' }}>
+              <input 
+                type="text" 
+                value={authorSearch} 
+                onChange={handleAuthorSearchChange} 
+                placeholder="Busca autores por nombre o correo..." 
+                className="sf-input" 
+              />
+              {buscandoAutores && <span style={{ fontSize: '12px', color: '#666' }}>Buscando...</span>}
+              
+              {authorResults.length > 0 && (
+                <ul style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#fff', border: '1px solid #ddd', borderRadius: '4px', zIndex: 10, listStyle: 'none', padding: 0, margin: '4px 0', maxHeight: '150px', overflowY: 'auto' }}>
+                  {authorResults.map(a => {
+                    const rolLegible = a.role === 'GUEST_SPOKER' ? 'Invitado Especial' : (a.role === 'AUTHOR' ? 'Autor' : a.role);
+                    return (
+                      <li 
+                        key={a.id} 
+                        onClick={() => addAuthor(a)}
+                        style={{ padding: '8px 12px', cursor: 'pointer', borderBottom: '1px solid #eee' }}
+                      >
+                        {a.displayName} <span style={{ color: '#888', fontSize: '12px' }}>({rolLegible})</span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </div>
+            {selectedAuthors.length > 0 && (
+              <div style={{ marginTop: '8px', display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                {selectedAuthors.map(a => (
+                  <span key={a.id} style={{ display: 'inline-flex', alignItems: 'center', background: '#e0e7ff', color: '#3730a3', padding: '4px 8px', borderRadius: '16px', fontSize: '14px' }}>
+                    {a.displayName}
+                    <button type="button" onClick={() => removeAuthor(a.id)} style={{ background: 'none', border: 'none', color: '#3730a3', marginLeft: '4px', cursor: 'pointer', fontWeight: 'bold' }}>×</button>
+                  </span>
+                ))}
+              </div>
+            )}
+            <p className="enviar-field-hint">Añade a todos los coautores registrados en la plataforma.</p>
+          </div>
+
+          <div>
+            <label className="sf-label">Ponente (quien expondrá) *</label>
+            {!selectedPresenter ? (
+              <div style={{ position: 'relative' }}>
+                <input 
+                  type="text" 
+                  value={presenterSearch} 
+                  onChange={handlePresenterSearchChange} 
+                  placeholder="Busca al ponente por nombre o correo..." 
+                  className="sf-input" 
+                />
+                {buscandoPonente && <span style={{ fontSize: '12px', color: '#666' }}>Buscando...</span>}
+                
+                {presenterResults.length > 0 && (
+                  <ul style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#fff', border: '1px solid #ddd', borderRadius: '4px', zIndex: 10, listStyle: 'none', padding: 0, margin: '4px 0', maxHeight: '150px', overflowY: 'auto' }}>
+                    {presenterResults.map(p => {
+                      const rolLegible = p.role === 'GUEST_SPOKER' ? 'Invitado Especial' : (p.role === 'AUTHOR' ? 'Autor' : p.role);
+                      return (
+                        <li 
+                          key={p.id} 
+                          onClick={() => selectPresenter(p)}
+                          style={{ padding: '8px 12px', cursor: 'pointer', borderBottom: '1px solid #eee' }}
+                        >
+                          {p.displayName} <span style={{ color: '#888', fontSize: '12px' }}>({rolLegible})</span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </div>
+            ) : (
+              <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', background: '#dcfce7', color: '#166534', padding: '6px 12px', borderRadius: '4px', fontSize: '14px', border: '1px solid #bbf7d0' }}>
+                  <strong>{selectedPresenter.displayName}</strong>
+                </span>
+                <button type="button" onClick={clearPresenter} style={{ background: '#fee2e2', color: '#991b1b', border: '1px solid #fecaca', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '14px' }}>
+                  Cambiar ponente
+                </button>
+              </div>
+            )}
+            <p className="enviar-field-hint">Selecciona a una sola persona como el presentador oficial del artículo.</p>
           </div>
 
           <div>

@@ -160,7 +160,7 @@ const Registro = () => {
                 className="sf-select registro-input-bg"
               >
                 <option value="AUTHOR">Autor (envía artículos)</option>
-                <option value="ASISTANT">Asistente (evaluación / apoyo)</option>
+                <option value="ASISTANT">Asistente (público general)</option>
                 <option value="CHAIR">Chair (organizador de la conferencia)</option>
                 <option value="ADMIN">Administrador</option>
                 <option value="GUEST_SPOKER">Ponente Invitado</option>
