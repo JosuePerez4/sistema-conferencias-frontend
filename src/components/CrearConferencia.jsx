@@ -232,15 +232,18 @@ const CrearConferencia = () => {
                 
                 {speakerResults.length > 0 && (
                   <ul className="crear-conferencia-autocomplete-list" style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#fff', border: '1px solid #ddd', borderRadius: '4px', zIndex: 10, listStyle: 'none', padding: 0, margin: '4px 0', maxHeight: '150px', overflowY: 'auto' }}>
-                    {speakerResults.map((res) => (
-                      <li 
-                        key={res.id} 
-                        onClick={() => addSpeaker(res)}
-                        style={{ padding: '8px 12px', cursor: 'pointer', borderBottom: '1px solid #eee' }}
-                      >
-                        {res.displayName} <span style={{ color: '#888', fontSize: '12px' }}>({res.role})</span>
-                      </li>
-                    ))}
+                    {speakerResults.map(s => {
+                      const rolLegible = s.role === 'GUEST_SPOKER' ? 'Invitado Especial' : (s.role === 'AUTHOR' ? 'Autor' : s.role);
+                      return (
+                        <li 
+                          key={s.id} 
+                          onClick={() => addSpeaker(s)}
+                          style={{ padding: '8px 12px', cursor: 'pointer', borderBottom: '1px solid #eee' }}
+                        >
+                          {s.displayName} <span style={{ color: '#888', fontSize: '12px' }}>({rolLegible})</span>
+                        </li>
+                      );
+                    })}
                   </ul>
                 )}
               </div>

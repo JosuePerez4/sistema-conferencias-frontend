@@ -17,7 +17,7 @@ const Home = () => {
                 <Link to="/conferencias" className="home-cta">
                     Explorar Conferencias
                 </Link>
-                {userRole === 'ADMIN' && (
+                {(userRole === 'ADMIN' || userRole === 'CHAIR') && (
                     <Link to="/salas" className="home-cta home-cta-secondary">
                         Ver Salas
                     </Link>

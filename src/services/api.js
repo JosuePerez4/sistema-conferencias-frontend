@@ -93,7 +93,7 @@ export const apiService = {
 
   registro: async (datos) => {
     const uniqueDocumentNumber = `${Date.now().toString().slice(-8)}${Math.floor(Math.random() * 90) + 10}`;
-    const allowedRoles = new Set(['ADMIN', 'CHAIR', 'AUTHOR', 'ASISTANT']);
+    const allowedRoles = new Set(['ADMIN', 'CHAIR', 'AUTHOR', 'ASISTANT', 'GUEST_SPOKER']);
     const role =
       datos.role && allowedRoles.has(String(datos.role).toUpperCase())
         ? String(datos.role).toUpperCase()
@@ -497,7 +497,14 @@ export const apiService = {
       headers: getAuthHeaders()
     });
     if (!response.ok) throw new Error(await parseError(response, 'Error al activar chair'));
-    return;
+  },
+
+  desactivarChair: async (id) => {
+    const response = await fetch(`${USERS_URL}/chairs/${encodeURIComponent(id)}/deactivate`, {
+      method: 'POST',
+      headers: getAuthHeaders()
+    });
+    if (!response.ok) throw new Error(await parseError(response, 'Error al desactivar chair'));
   },
 
   // ─── Notification Service ────────────────────────────────────────────────

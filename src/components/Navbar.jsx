@@ -38,7 +38,7 @@ const Navbar = () => {
         <div className="navbar-links">
           <Link to="/" className="navbar-link">Inicio</Link>
           <Link to="/conferencias" className="navbar-link">Conferencias</Link>
-          {userRole === 'ADMIN' && (
+          {(userRole === 'ADMIN' || userRole === 'CHAIR') && (
             <Link to="/salas" className="navbar-link">Salas</Link>
           )}
           {userRole === 'ADMIN' && (
@@ -47,10 +47,10 @@ const Navbar = () => {
           {userRole === 'ADMIN' && (
             <Link to="/admin/chairs" className="navbar-link">Gestionar Chairs</Link>
           )}
-          {userRole === 'AUTHOR' && (
+          {(userRole === 'AUTHOR' || userRole === 'GUEST_SPOKER') && (
             <Link to="/mis-articulos" className="navbar-link">Mis Artículos</Link>
           )}
-          {userRole === 'ADMIN' && (
+          {(userRole === 'ADMIN' || userRole === 'CHAIR') && (
             <Link to="/crear-conferencia" className="navbar-link-create">
               <span className="navbar-link-create-icon">+</span> Crear Evento
             </Link>

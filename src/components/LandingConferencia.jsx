@@ -63,13 +63,15 @@ const LandingConferencia = () => {
         };
 
         const cargarArticulosAutor = async () => {
-            if (userRole !== 'AUTHOR' || !estaLogueado) return;
+            if ((userRole !== 'AUTHOR' && userRole !== 'GUEST_SPOKER') || !estaLogueado) return;
             try {
                 const res = await apiService.obtenerPapers(id);
                 const lista = Array.isArray(res) ? res : (res?.data || res?.content || []);
                 // Filtrar por nombre de usuario en la lista de autores
                 const filtrados = lista.filter(p => {
-                    const autoresStr = Array.isArray(p.authors) ? p.authors.join(' ') : String(p.authors || '');
+                    const autoresStr = typeof p.authors === 'string' 
+                      ? p.authors 
+                      : (Array.isArray(p.authors) ? p.authors.map(a => typeof a === 'object' ? (a.displayName || `${a.firstName || ''} ${a.lastName || ''}`.trim()) : String(a)).join(' ') : String(p.authors || ''));
                     return autoresStr.toLowerCase().includes(userName.toLowerCase());
                 });
                 setMisArticulos(filtrados);
@@ -202,7 +204,7 @@ const LandingConferencia = () => {
                             </p>
                         </section>
 
-                        {userRole === 'AUTHOR' && misArticulos.length > 0 && (
+                        {(userRole === 'AUTHOR' || userRole === 'GUEST_SPOKER') && misArticulos.length > 0 && (
                             <section className="landing-section-spaced" style={{ backgroundColor: '#f8f9fa', padding: '1.5rem', borderRadius: '12px', border: '1px solid #e9ecef' }}>
                                 <h2 className="landing-section-title" style={{ color: '#1a73e8' }}>Mis Artículos</h2>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -307,7 +309,7 @@ const LandingConferencia = () => {
                                         Comprar Entrada
                                     </Link>
                                 )}
-                            {userRole === 'ADMIN' && (
+                            {(userRole === 'ADMIN' || userRole === 'CHAIR') && (
                                 <Link to={`/editar-conferencia/${id}`} className="landing-btn-secondary">
                                     Editar Conferencia
                                 </Link>
@@ -317,7 +319,7 @@ const LandingConferencia = () => {
                                     Configurar Espacios
                                 </Link>
                             )}
-                            {userRole === 'ADMIN' && (
+                            {(userRole === 'ADMIN' || userRole === 'CHAIR') && (
                                 <Link to={`/conferencia/${id}/salas`} className="landing-btn-secondary">
                                     Ver Salas
                                 </Link>
@@ -327,7 +329,7 @@ const LandingConferencia = () => {
                                     Evaluar Artículos
                                 </Link>
                             )}
-                            {userRole === 'AUTHOR' && (
+                            {(userRole === 'AUTHOR' || userRole === 'GUEST_SPOKER') && (
                                 <Link to={`/enviar-articulo/${id}`} className="landing-btn-secondary">
                                     Enviar Artículo
                                 </Link>
