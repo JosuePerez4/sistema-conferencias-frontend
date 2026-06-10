@@ -16,9 +16,14 @@ const CrearConferencia = () => {
     endDate: '',
     submissionDeadline: '',
     topics: '',
-    speakers: '',
+    sponsors: '',
     state: 'PUBLISHED',
   });
+
+  const [speakerSearch, setSpeakerSearch] = useState('');
+  const [speakerResults, setSpeakerResults] = useState([]);
+  const [selectedSpeakers, setSelectedSpeakers] = useState([]);
+  const [buscandoPonentes, setBuscandoPonentes] = useState(false);
 
   const [cargando, setCargando] = useState(false);
   const [exito, setExito] = useState(false);
@@ -30,6 +35,39 @@ const CrearConferencia = () => {
       ...formData,
       [name]: type === 'checkbox' ? checked : value
     });
+  };
+
+  const handleSpeakerSearchChange = async (e) => {
+    const query = e.target.value;
+    setSpeakerSearch(query);
+    if (query.length >= 2) {
+      setBuscandoPonentes(true);
+      try {
+        const results = await apiService.buscarPonentes(query);
+        // Filtrar los que ya están seleccionados
+        const filtered = results.filter(
+          (r) => !selectedSpeakers.some((s) => s.id === r.id)
+        );
+        setSpeakerResults(filtered);
+      } catch (err) {
+        console.error("Error buscando ponentes", err);
+        setSpeakerResults([]);
+      } finally {
+        setBuscandoPonentes(false);
+      }
+    } else {
+      setSpeakerResults([]);
+    }
+  };
+
+  const addSpeaker = (speaker) => {
+    setSelectedSpeakers([...selectedSpeakers, speaker]);
+    setSpeakerSearch('');
+    setSpeakerResults([]);
+  };
+
+  const removeSpeaker = (id) => {
+    setSelectedSpeakers(selectedSpeakers.filter((s) => s.id !== id));
   };
 
   const handleSubmit = async (e) => {
@@ -49,6 +87,11 @@ const CrearConferencia = () => {
       return;
     }
 
+    if (selectedSpeakers.length === 0) {
+      setError('Debes seleccionar al menos un ponente.');
+      return;
+    }
+
     setCargando(true);
     setError('');
     setExito(false);
@@ -64,7 +107,8 @@ const CrearConferencia = () => {
         endDate: formData.endDate,
         submissionDeadline: formData.submissionDeadline,
         topics: formData.topics,
-        speakers: formData.speakers,
+        sponsors: formData.sponsors,
+        speakerIds: selectedSpeakers.map((s) => s.id),
         state: formData.state
       });
       setExito(true);
@@ -169,9 +213,47 @@ const CrearConferencia = () => {
             </div>
 
             <div className="crear-conferencia-field">
+              <label>Patrocinadores</label>
+              <input type="text" name="sponsors" value={formData.sponsors} onChange={handleChange} placeholder="Ej. TechCorp, GlobalSoft" className="crear-conferencia-input" />
+              <p className="crear-conferencia-field-help">Agrega uno o varios, separados por coma (opcional).</p>
+            </div>
+
+            <div className="crear-conferencia-field">
               <label>Ponente(s) *</label>
-              <input type="text" name="speakers" value={formData.speakers} onChange={handleChange} required placeholder="Ej. Ana Perez, Luis Gomez" className="crear-conferencia-input" />
-              <p className="crear-conferencia-field-help">Puedes agregar varios separados por coma.</p>
+              <div className="crear-conferencia-autocomplete-container" style={{ position: 'relative' }}>
+                <input 
+                  type="text" 
+                  value={speakerSearch} 
+                  onChange={handleSpeakerSearchChange} 
+                  placeholder="Escribe el nombre del ponente para buscar..." 
+                  className="crear-conferencia-input" 
+                />
+                {buscandoPonentes && <span className="crear-conferencia-field-help">Buscando...</span>}
+                
+                {speakerResults.length > 0 && (
+                  <ul className="crear-conferencia-autocomplete-list" style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#fff', border: '1px solid #ddd', borderRadius: '4px', zIndex: 10, listStyle: 'none', padding: 0, margin: '4px 0', maxHeight: '150px', overflowY: 'auto' }}>
+                    {speakerResults.map((res) => (
+                      <li 
+                        key={res.id} 
+                        onClick={() => addSpeaker(res)}
+                        style={{ padding: '8px 12px', cursor: 'pointer', borderBottom: '1px solid #eee' }}
+                      >
+                        {res.displayName} <span style={{ color: '#888', fontSize: '12px' }}>({res.role})</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+              
+              <div className="crear-conferencia-selected-speakers" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '8px' }}>
+                {selectedSpeakers.map((s) => (
+                  <span key={s.id} style={{ display: 'inline-flex', alignItems: 'center', background: '#e0e7ff', color: '#3730a3', padding: '4px 10px', borderRadius: '16px', fontSize: '14px' }}>
+                    {s.displayName}
+                    <button type="button" onClick={() => removeSpeaker(s.id)} style={{ background: 'none', border: 'none', marginLeft: '6px', color: '#4f46e5', cursor: 'pointer', fontWeight: 'bold' }}>×</button>
+                  </span>
+                ))}
+              </div>
+              <p className="crear-conferencia-field-help">Busca y selecciona a los usuarios con rol de Ponente (GUEST_SPOKER) o Autor.</p>
             </div>
 
             <div className="crear-conferencia-checkbox-row">

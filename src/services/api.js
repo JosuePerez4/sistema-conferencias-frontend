@@ -140,7 +140,8 @@ export const apiService = {
       endDate: datos.endDate,
       submissionDeadline: datos.submissionDeadline,
       topics: normalizeStringList(datos.topics),
-      speakers: normalizeStringList(datos.speakers),
+      sponsors: normalizeStringList(datos.sponsors),
+      speakerIds: datos.speakerIds,
       state: datos.state
     };
     const response = await fetch(`${CONF_URL}/create`, {
@@ -173,7 +174,8 @@ export const apiService = {
       endDate: datos.endDate,
       submissionDeadline: datos.submissionDeadline,
       topics: normalizeStringList(datos.topics),
-      speakers: normalizeStringList(datos.speakers),
+      sponsors: normalizeStringList(datos.sponsors),
+      speakerIds: datos.speakerIds,
       state: datos.state
     };
     const response = await fetch(`${CONF_URL}/edit/${encodeURIComponent(id)}`, {
@@ -459,6 +461,27 @@ export const apiService = {
   },
 
   // ─── User Service ────────────────────────────────────────────────────────
+
+  buscarPonentes: async (query) => {
+    const response = await fetch(`${USERS_URL}/paper-authors/search?q=${encodeURIComponent(query)}`, {
+      method: 'GET',
+      headers: getAuthHeaders()
+    });
+    if (!response.ok) throw new Error(await parseError(response, 'Error al buscar ponentes'));
+    return response.json();
+  },
+
+  obtenerPonentesPorId: async (ids) => {
+    if (!ids || ids.length === 0) return { authors: [] };
+    const response = await fetch(`${USERS_URL}/paper-authors/validate`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ userIds: ids })
+    });
+    if (!response.ok) throw new Error(await parseError(response, 'Error al obtener detalles de ponentes'));
+    return response.json();
+  },
+
   obtenerChairs: async () => {
     const response = await fetch(`${USERS_URL}/chairs`, {
       method: 'GET',

@@ -15,6 +15,7 @@ const LandingConferencia = () => {
     const [misArticulos, setMisArticulos] = useState([]);
     const [estadoPagoAsistente, setEstadoPagoAsistente] = useState(null);
     const [cargandoEstadoPago, setCargandoEstadoPago] = useState(false);
+    const [ponentesDetallados, setPonentesDetallados] = useState([]);
 
     const esAsistente = useMemo(() => {
         const r = (userRole || '').toUpperCase();
@@ -43,6 +44,17 @@ const LandingConferencia = () => {
             try {
                 const respuesta = await apiService.obtenerConferencia(id);
                 setConferencia(respuesta);
+                
+                if (respuesta?.speakerIds && respuesta.speakerIds.length > 0) {
+                    try {
+                        const respPonentes = await apiService.obtenerPonentesPorId(respuesta.speakerIds);
+                        if (respPonentes && respPonentes.authors) {
+                            setPonentesDetallados(respPonentes.authors);
+                        }
+                    } catch(e) {
+                        console.error('Error cargando detalles de ponentes:', e);
+                    }
+                }
             } catch (err) {
                 setError(err.message || 'No fue posible cargar la conferencia.');
             } finally {
@@ -94,9 +106,7 @@ const LandingConferencia = () => {
         const precioFormateado = Number.isFinite(precioNumero) && precioNumero > 0
             ? `$${precioNumero} USD`
             : 'Gratis';
-        const speakers = Array.isArray(conferencia?.speakers)
-            ? conferencia.speakers
-            : (conferencia?.speakerName ? [conferencia.speakerName] : []);
+        const sponsors = Array.isArray(conferencia?.sponsors) ? conferencia.sponsors : [];
         const topics = Array.isArray(conferencia?.topics)
             ? conferencia.topics
             : (conferencia?.topic ? [conferencia.topic] : []);
@@ -111,7 +121,8 @@ const LandingConferencia = () => {
             modalidad: Boolean(conferencia?.virtual) ? 'Virtual' : 'Presencial',
             imagen: conferencia?.imageUrl || conferencia?.imagen || imagenFallback,
             precio: precioFormateado,
-            speakers,
+            sponsors,
+            estado: conferencia?.state || 'Desconocido',
             topics
         };
     }, [conferencia]);
@@ -157,6 +168,9 @@ const LandingConferencia = () => {
                             <div className="landing-meta-pill">
                                 🖥️ {detalle?.modalidad}
                             </div>
+                            <div className="landing-meta-pill" style={{backgroundColor: 'rgba(255,255,255,0.2)'}}>
+                                📌 Estado: {detalle?.estado}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -171,8 +185,18 @@ const LandingConferencia = () => {
                                 {detalle?.descripcion}
                             </p>
                             <p className="landing-text">
-                                <strong>Ponentes:</strong> {detalle?.speakers?.length ? detalle.speakers.join(', ') : 'Por confirmar'}
+                                <strong>Ponentes:</strong> {ponentesDetallados.length > 0 
+                                    ? ponentesDetallados.map(p => {
+                                        const rolLegible = p.role === 'GUEST_SPOKER' ? 'Invitado Especial' : (p.role === 'AUTHOR' ? 'Autor' : p.role);
+                                        return `${p.displayName} (${rolLegible})`;
+                                      }).join(' • ') 
+                                    : 'Por confirmar'}
                             </p>
+                            {detalle?.sponsors?.length > 0 && (
+                                <p className="landing-text">
+                                    <strong>Patrocinadores:</strong> {detalle.sponsors.join(', ')}
+                                </p>
+                            )}
                             <p className="landing-text">
                                 <strong>Tópicos:</strong> {detalle?.topics?.length ? detalle.topics.join(', ') : 'Por confirmar'}
                             </p>
