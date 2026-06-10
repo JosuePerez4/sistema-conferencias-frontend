@@ -1,48 +1,49 @@
 import React, { useState, useEffect } from 'react';
+import { apiService } from '../services/api';
 import '../styles/components/admin-chairs.css';
-
-// Usuarios mock por defecto si es la primera vez que se carga
-const defaultMockChairs = [
-    { id: '1', nombre: 'Carlos Ruiz', correo: 'carlos.ruiz@ejemplo.com', estado: 'INACTIVO' },
-    { id: '2', nombre: 'Elena Gómez', correo: 'elena.gomez@ejemplo.com', estado: 'INACTIVO' },
-    { id: '3', nombre: 'Javier Ramírez', correo: 'javier.ramirez@ejemplo.com', estado: 'ACTIVO' },
-    { id: '4', nombre: 'Lucía Fernández', correo: 'lucia.fernandez@ejemplo.com', estado: 'INACTIVO' }
-];
 
 const AdminChairs = () => {
     const [chairs, setChairs] = useState([]);
+    const [cargando, setCargando] = useState(true);
+    const [error, setError] = useState(null);
+
+    const cargarChairs = async () => {
+        try {
+            setCargando(true);
+            const data = await apiService.obtenerChairs();
+            // Transformamos datos si el backend retorna diferente estructura o usamos directamente
+            const chairsFormateadas = data.map(c => ({
+                id: c.id,
+                nombre: c.firstName + ' ' + c.lastName,
+                correo: c.email,
+                estado: c.isActive ? 'ACTIVO' : 'INACTIVO'
+            }));
+            setChairs(chairsFormateadas);
+            setError(null);
+        } catch (err) {
+            setError('Hubo un error al cargar los usuarios CHAIR. Verifica tu conexión.');
+            console.error(err);
+        } finally {
+            setCargando(false);
+        }
+    };
 
     useEffect(() => {
-        // Al montar, intentamos cargar los usuarios guardados en localStorage
-        // Así persistimos la activación de manera local.
-        const savedChairs = localStorage.getItem('mockChairs');
-        if (savedChairs) {
-            try {
-                setChairs(JSON.parse(savedChairs));
-            } catch (e) {
-                setChairs(defaultMockChairs);
-            }
-        } else {
-            setChairs(defaultMockChairs);
-            localStorage.setItem('mockChairs', JSON.stringify(defaultMockChairs));
-        }
+        cargarChairs();
     }, []);
 
-    const handleActivar = (id) => {
-        const nuevosChairs = chairs.map(chair => {
-            if (chair.id === id) {
-                return { ...chair, estado: 'ACTIVO' };
-            }
-            return chair;
-        });
-        setChairs(nuevosChairs);
-        localStorage.setItem('mockChairs', JSON.stringify(nuevosChairs));
-        
-        // Simulación de pequeña alerta de éxito
-        alert('El usuario CHAIR ha sido activado correctamente (simulado).');
+    const handleActivar = async (id) => {
+        try {
+            await apiService.activarChair(id);
+            alert('El usuario CHAIR ha sido activado correctamente en el backend.');
+            await cargarChairs(); // Refrescar lista desde la BD
+        } catch (err) {
+            alert('Error al activar el usuario: ' + err.message);
+        }
     };
 
     const handleDesactivar = (id) => {
+        // Mantenemos la lógica local para desactivar hasta que el backend la implemente
         const nuevosChairs = chairs.map(chair => {
             if (chair.id === id) {
                 return { ...chair, estado: 'INACTIVO' };
@@ -50,7 +51,7 @@ const AdminChairs = () => {
             return chair;
         });
         setChairs(nuevosChairs);
-        localStorage.setItem('mockChairs', JSON.stringify(nuevosChairs));
+        alert('Usuario desactivado localmente (Falta endpoint en backend)');
     };
 
     return (
