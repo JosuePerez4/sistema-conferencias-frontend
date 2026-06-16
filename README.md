@@ -61,6 +61,17 @@ Comandos disponibles:
 
 Todas las rutas se renderizan dentro de `Layout`, que incluye `Navbar` y `Footer`.
 
+## Adaptadores de datos en UI
+
+Algunas vistas toleran variaciones de payload para convivir con cambios del backend:
+
+- `Conferencias` acepta listados como arreglo plano, `{ data: [...] }` o `{ content: [...] }`.
+- Los ids de conferencia pueden venir como `id`, `conferenceId` o `_id`; si no hay id, la tarjeta no enlaza al detalle.
+- Nombre, descripcion, ubicacion, categoria, imagen, fecha y ponentes tienen aliases de lectura (`name/titulo`, `description/descripcion`, `location/lugar`, `category/categoria`, `imageUrl/imagen`, `startDate/fecha/date`, `speakers/speakerName`).
+- Las fechas `YYYY-MM-DD` se formatean con `new Date(year, month, day)` para evitar desplazamientos por UTC en catalogo y detalle.
+- `DetalleArticulo` acepta detalle de paper como respuesta plana o dentro de `{ data: ... }`; autores puede ser string o arreglo.
+- `EnviarArticulo` solo acepta `conferenceId` numerico positivo o UUID antes de enviar el `multipart/form-data`.
+
 ## Contrato del API Gateway
 
 El cliente vive en `src/services/api.js` y usa `fetch`. Los errores HTTP se convierten en mensajes legibles con `parseError`, incluyendo `message`, `detail`, `error`, `fieldErrors` o `errors` cuando el backend los envia.
@@ -127,6 +138,21 @@ Base: `/papers/conference/{conferenceId}`
 
 `EnviarArticulo` valida que `conferenceId` sea numerico positivo o UUID, y que los campos de texto no queden vacios. Los adjuntos aceptados en UI son `.pdf`, `.doc` y `.docx`.
 
+Ejemplo de parte `paper` enviada por `EnviarArticulo`:
+
+```json
+{
+  "title": "Evaluacion de modelos generativos",
+  "abstractText": "Resumen del trabajo...",
+  "topic": "Inteligencia artificial",
+  "institutionalAffiliation": "Universidad X",
+  "keywords": "LLM; evaluacion; NLP",
+  "authors": "Ana Perez; Juan Gomez"
+}
+```
+
+Despues de crear el paper, la vista espera que la respuesta incluya `id` o `paperId`; con ese valor redirige a `/conferencia/{conferenceId}/articulo/{paperId}`.
+
 Estados de paper mostrados por `DetalleArticulo`:
 
 - `SUBMITTED`
@@ -135,6 +161,16 @@ Estados de paper mostrados por `DetalleArticulo`:
 - `IN_CORRECTIONS`
 - `PRESENTED`
 - `PUBLISHED`
+
+### Flujo de adjuntos y evaluacion
+
+1. `EnviarArticulo` crea el paper y puede incluir adjuntos iniciales en la misma peticion `multipart/form-data`.
+2. `DetalleArticulo` recarga el paper con `GET /papers/conference/{conferenceId}/{paperId}` y lee adjuntos desde `documents`.
+3. Si `hasDocument` viene en `true` pero `documents` llega vacio o ausente, la UI muestra un aviso de inconsistencia en vez de inventar archivos.
+4. Los adjuntos adicionales se suben con `POST /{paperId}/attachments` y, si la respuesta es exitosa, la vista vuelve a cargar el detalle.
+5. La descarga usa `Content-Disposition` para resolver nombre; si falta, cae a `adjunto`.
+6. La vista previa solo se ofrece para PDF detectado por `contentType` u extension `.pdf`; otros formatos se descargan.
+7. La evaluacion envia `{ status, observations }`; si observaciones queda en blanco, se envia `null`.
 
 ### Archivos de conferencia
 
@@ -163,6 +199,18 @@ Base: `/files`
 2. Ajustar los formularios o mapeos que consumen esa funcion.
 3. Revisar mensajes de error: `parseError` ya soporta texto plano, JSON con `message/detail/error` y listas de errores de campo.
 4. Ejecutar `npm run lint` y `npm run build`.
+
+### Validar manualmente flujos criticos
+
+Antes de entregar cambios que toquen formularios, rutas o contratos HTTP, recorre al menos:
+
+1. Login con credenciales validas y confirmacion de `accessToken` en `localStorage`.
+2. Catalogo de conferencias con busqueda por nombre/categoria y detalle de una conferencia con id.
+3. Crear conferencia con fechas validas; probar que `endDate < startDate` y `submissionDeadline` fuera de rango se bloquean.
+4. Editar conferencia existente y cancelar/eliminar desde el modal de confirmacion.
+5. Enviar articulo con metadatos obligatorios, con y sin adjuntos iniciales.
+6. Abrir detalle de articulo, descargar un adjunto, previsualizar un PDF y agregar nuevos adjuntos.
+7. Cambiar estado de evaluacion y confirmar que el detalle se recarga con el nuevo estado.
 
 ## Despliegue
 
